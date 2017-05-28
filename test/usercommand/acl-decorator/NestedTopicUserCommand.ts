@@ -1,22 +1,40 @@
+/* tslint:disable:no-console */
 import * as assert from 'assert'
 import * as mage from 'mage'
 import { Acl, ValidatedTopic } from '../../../src'
-import { IsNumberString, IsInt, Min, Max, ValidateNested } from 'class-validator';
+import { IsNumberString, IsInt, Min, Max, ValidateNested } from 'class-validator'
 
+/**
+ * Index
+ *
+ * @export
+ * @class Index
+ */
 export class Index {
   @IsNumberString()
-  id: string
+  public id: string
 }
 
+/**
+ * Topic to be used in our user commands
+ *
+ * @class NestedTopic
+ * @extends {ValidatedTopic}
+ */
 class NestedTopic extends ValidatedTopic {
   public static readonly index = ['id']
   public static readonly indexType = Index
 
   @Min(1)
   @Max(3)
-  count: number
+  public count: number
 }
 
+/**
+ * User command which receives a Topic as a parameter
+ *
+ * @class NestedTopicUserCommand
+ */
 class NestedTopicUserCommand {
   @IsInt()
   public increment: number

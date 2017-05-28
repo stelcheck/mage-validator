@@ -1,14 +1,25 @@
+/* tslint:disable:no-console */
 import * as assert from 'assert'
 import * as mage from 'mage'
 import { Acl } from '../../../src'
-import { IsInt, Min, Max, ValidateNested } from 'class-validator';
+import { IsInt, Min, Max, ValidateNested } from 'class-validator'
 
+/**
+ * Nested data
+ *
+ * @class NestedData
+ */
 class NestedData {
   @Min(1)
   @Max(3)
-  count: number
+  public count: number
 }
 
+/**
+ * User command which receives typed data as a parameter
+ *
+ * @class NestedDataUserCommand
+ */
 class NestedDataUserCommand {
   @IsInt()
   public increment: number

@@ -11,14 +11,23 @@ import 'reflect-metadata'
 
 import * as classValidatorError from 'class-validator/validation/ValidationError'
 
+/**
+ * Validation error classes
+ *
+ * Will contain all the validation errors that were found upon validation.
+ *
+ * @export
+ * @class ValidationError
+ * @extends {Error}
+ */
 export class ValidationError extends Error {
-  details: any[]
+  public details: any[]
 
-  constructor(details: any) {
-		super('Validation error');
+  constructor(message: string, details: any) {
+    super(message)
     this.details = details
-		this.name = 'ValidationError';
-	}
+    this.name = 'ValidationError'
+  }
 }
 
 /**
@@ -50,9 +59,9 @@ function throwIfNotFileNotFoundError(error: NodeJS.ErrnoException) {
  * @param {*} obj
  * @returns
  */
-function throwOnError(errors: classValidatorError.ValidationError[], obj?: any) {
+function throwOnError(message: string, errors: classValidatorError.ValidationError[], obj?: any) {
   if (errors.length > 0) {
-    throw new ValidationError(errors)
+    throw new ValidationError(message, errors)
   }
 
   return obj
@@ -203,7 +212,7 @@ export class ValidatedTopic {
     let instance
 
     if (data) {
-      instance = classTransformer.plainToClass<ValidatedTopic, Object>(classInstance, data)
+      instance = classTransformer.plainToClass<ValidatedTopic, object>(classInstance, data)
     } else {
       instance = new classInstance()
     }
@@ -226,7 +235,7 @@ export class ValidatedTopic {
    *
    * @memberof ValidatedTopic
    */
-  public static async execute(state: any, method: any, args: any[], run: Function): Promise<any> {
+  public static async execute(state: any, method: any, args: any[], run: (data: any) => any): Promise<any> {
     return new Promise((resolve, reject) => {
       state.archivist[method](...args, (error: any, data: any) => {
         if (error) {
@@ -258,7 +267,7 @@ export class ValidatedTopic {
       topicName,
       index,
       options
-    ], (data: any) => this.create(state, index, data))
+    ], async (data: any) => this.create(state, index, data))
   }
 
   /**
@@ -360,7 +369,7 @@ export class ValidatedTopic {
     return this.execute(state, 'list', [
       topicName,
       partialIndex
-    ], (indexes: archivist.IArchivistIndex[]) => {
+    ], async (indexes: archivist.IArchivistIndex[]) => {
       return this.mget(state, indexes, options)
     })
   }
@@ -420,7 +429,7 @@ export class ValidatedTopic {
       index[field] = indexData[field]
     }
 
-    await classValidator.validate(index).then((errors) => throwOnError(errors))
+    await classValidator.validate(index).then((errors) => throwOnError('Invalid index', errors))
 
     Object.defineProperty(this, '_index', {
       value: index
@@ -533,7 +542,7 @@ export class ValidatedTopic {
    * @memberof ValidatedTopic
    */
   public async validate(): Promise<classValidatorError.ValidationError[]> {
-    return classValidator.validate(this).then((errors) => throwOnError(errors))
+    return classValidator.validate(this).then((errors) => throwOnError('Invalid type', errors))
   }
 }
 
@@ -550,8 +559,8 @@ export function Acl(...acl: string[]) {
   return function (UserCommand: any, key: string) {
     if (key !== 'execute') {
       throw crash('@validate only works for usercommand.execute functions', {
-        userCommand: UserCommand,
-        method: key
+        method: key,
+        userCommand: UserCommand
       })
     }
 
@@ -561,9 +570,9 @@ export function Acl(...acl: string[]) {
     const parameterNames = functionArguments(execute)
     const types = Reflect.getMetadata('design:paramtypes', UserCommand, key)
 
-    function validateObject(obj: any) {
+    function validateObject(message: string, obj: any) {
       if (typeof obj === 'object') {
-        return classValidator.validate(obj).then((errors) => throwOnError(errors, obj))
+        return classValidator.validate(obj).then((errors) => throwOnError(message, errors, obj))
       }
 
       return obj
@@ -599,13 +608,13 @@ export function Acl(...acl: string[]) {
         }))
 
         // Validate parameters
-        await validateObject(userCommand)
+        await validateObject('Invalid user command input', userCommand)
 
         // Execute the actual user command
         const output = await execute(state, ...casted)
 
         // Validate the returned value
-        return await validateObject(output)
+        return await validateObject('Invalid user command return value', output)
       }
     }
   }

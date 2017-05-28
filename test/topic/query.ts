@@ -13,7 +13,7 @@ describe('query', function () {
     const options = {
       ok: 'computer'
     }
-    const queries = [
+    const queriesArray = [
       { id: '1' }
     ]
     const data = [{
@@ -21,7 +21,7 @@ describe('query', function () {
       url: 'https://abc.com'
     }]
 
-    mockStateArchivistMethod(state, 'list', queries, function (topicName: string, index: mage.archivist.IArchivistIndex) {
+    mockStateArchivistMethod(state, 'list', queriesArray, function (topicName: string, index: mage.archivist.IArchivistIndex) {
       assert.equal(topicName, 'TestTopic')
       assert.equal(index.id, 1)
     })

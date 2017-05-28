@@ -2,10 +2,10 @@ import * as mage from 'mage'
 import * as path from 'path'
 
 describe('Module topic loaders', function () {
-  let oldListModules = mage.listModules
-  let oldGetModulePath = mage.getModulePath
+  const oldListModules = mage.listModules
+  const oldGetModulePath = mage.getModulePath
 
-  beforeEach(function() {
+  beforeEach(function () {
     const mageInstance: any = mage
 
     mageInstance.listModules = function () {

@@ -1,16 +1,17 @@
+/* tslint:disable:no-console */
 import * as assert from 'assert'
 import { createTopic } from './'
 import * as mage from 'mage'
 
 let state: mage.core.IState
 
-function createTests(name: string, args: string[], assertions: Function) {
+function createTests(name: string, testCreateArgs: string[], assertions: (...args: any[]) => any) {
   describe(name, function () {
     beforeEach(() => {
       state = new mage.core.State()
     })
 
-    function setupTopic(data: any) {
+    async function setupTopic(data: any) {
       return createTopic(state, data, name, function (topicName: string, ...args: string[]) {
         assert.equal(topicName, 'TestTopic')
         assertions(data, ...args)
@@ -24,7 +25,7 @@ function createTests(name: string, args: string[], assertions: Function) {
       })
 
       try {
-        await (<any> topic)[name](...args)
+        await (<any> topic)[name](...testCreateArgs)
       } catch (error) {
         const message = error.details[0].constraints.isUrl
         assert.equal(message, 'url must be an URL address')
@@ -37,7 +38,7 @@ function createTests(name: string, args: string[], assertions: Function) {
         url: 'https://www.google.com'
       })
 
-      await (<any> topic)[name](...args)
+      await (<any> topic)[name](...testCreateArgs)
     })
   })
 }

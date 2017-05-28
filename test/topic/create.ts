@@ -38,7 +38,7 @@ describe('create', function () {
     assert.equal(topic.url, 'https://google.com')
   })
 
-  it('Validation will work properly', async function() {
+  it('Validation will work properly', async function () {
     const topic: TestTopic = await TestTopic.create(state, { id: '1' }, {
       name: 'hi',
       url: 'I am not a url'

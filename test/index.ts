@@ -1,20 +1,34 @@
+/* tslint:disable:no-console */
 import * as mage from 'mage'
 import { ValidatedTopic } from '../src'
 import { IsNumberString, IsUrl } from 'class-validator'
 
+/**
+ * Index used during unit tests
+ *
+ * @export
+ * @class Index
+ */
 export class Index {
   @IsNumberString()
-  id: string
+  public id: string
 }
 
+/**
+ * Topic class used for testing
+ *
+ * @export
+ * @class TestTopic
+ * @extends {ValidatedTopic}
+ */
 export class TestTopic extends ValidatedTopic {
   public static readonly index = ['id']
   public static readonly indexType = Index
 
-  name: string
+  public name: string
 
   @IsUrl()
-  url: string
+  public url: string
 }
 
 describe('mage-validator', function () {
@@ -24,9 +38,9 @@ describe('mage-validator', function () {
     const mageInstance: any = mage
     mageInstance.logger = {
       emergency: {
-        data: function (data: any) {
+        data(data: any) {
           return {
-            log: function (...args: any[]) {
+            log(...args: any[]) {
               console.log('mage.emergency', ...args, data)
             }
           }

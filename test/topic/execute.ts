@@ -1,3 +1,4 @@
+/* tslint:disable:no-console */
 import { TestTopic } from './'
 import * as assert from 'assert'
 import * as mage from 'mage'
@@ -13,7 +14,7 @@ describe('execute', function () {
     const error = new Error('failed')
     const archivist: any = state.archivist
 
-    archivist.fakeCall = function (callback: Function) {
+    archivist.fakeCall = function (callback: (error: Error) => void) {
       return callback(error)
     }
 
@@ -21,7 +22,7 @@ describe('execute', function () {
       await TestTopic.execute(state, 'fakeCall', [], function () {
         throw new Error('execute call did not fail')
       })
-    } catch(error) {
+    } catch (error) {
       console.log(error.message)
       assert(error instanceof Error)
       assert.equal(error.message, 'failed')
