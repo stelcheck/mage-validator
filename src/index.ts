@@ -10,7 +10,16 @@ const functionArguments = require('function-arguments')
 import 'reflect-metadata'
 
 import * as classValidatorError from 'class-validator/validation/ValidationError'
-export const ValidationError = classValidatorError.ValidationError
+
+export class ValidationError extends Error {
+  details: any[]
+
+  constructor(details: any) {
+		super('Validation error');
+    this.details = details
+		this.name = 'ValidationError';
+	}
+}
 
 /**
  * Log emergency and crash
@@ -41,9 +50,9 @@ function throwIfNotFileNotFoundError(error: NodeJS.ErrnoException) {
  * @param {*} obj
  * @returns
  */
-function throwOnError(errors: classValidatorError.ValidationError[], obj: any) {
+function throwOnError(errors: classValidatorError.ValidationError[], obj?: any) {
   if (errors.length > 0) {
-    throw errors[0]
+    throw new ValidationError(errors)
   }
 
   return obj
@@ -92,31 +101,32 @@ export function loadTopicsFromModules(exports: any) {
  * @param {*} exports
  * @param {string} moduleName
  */
-export function loadTopicsFromModule(exports: any, moduleName: string) {
+export function loadTopicsFromModule(archivistExports: any, moduleName: string) {
   const modulePath = mage.getModulePath(moduleName)
   const moduleTopicsPath = path.join(modulePath, 'topics')
 
   try {
-    fs.readdirSync(moduleTopicsPath).forEach(function (topicPath) {
+    fs.readdirSync(moduleTopicsPath).forEach(function (topicFileName) {
+      const topicPath = path.join(moduleTopicsPath, topicFileName)
       const topicPathInfo = path.parse(topicPath)
       const topicName = topicPathInfo.name
 
       // Skip all files but TypeScript source files
-      if (topicPathInfo.ext !== 'ts') {
+      if (topicPathInfo.ext !== '.ts') {
         return
       }
 
-      if (exports[topicName]) {
+      if (archivistExports[topicName]) {
         throw crash('Topic is already defined!', {
-          alreadySetByModule: exports[topicName]._module,
+          alreadySetByModule: archivistExports[topicName]._module,
           module: moduleName,
           topic: topicName,
         })
       }
 
       // Add topic to the export of lib/archivist/index.ts
-      exports[topicName] = require(topicPath)
-      exports[topicName]._module = moduleName
+      archivistExports[topicName] = require(topicPath)
+      archivistExports[topicName]._module = moduleName
     })
   } catch (error) {
     throwIfNotFileNotFoundError(error)
@@ -148,8 +158,10 @@ export function loadTopicsFromModule(exports: any, moduleName: string) {
  * @abstract
  * @class ValidatedTopic
  */
-export class AbstractValidatedTopic {
-  public static readonly indexType: archivist.IArchivistIndex
+export class ValidatedTopic {
+  public static readonly index: string[]
+  public static readonly indexType: any
+  public static readonly vaults = {}
 
   /**
    * Return the current class
@@ -159,7 +171,7 @@ export class AbstractValidatedTopic {
    *
    * @memberof ValidatedTopic
    */
-  public static getClass(): typeof AbstractValidatedTopic {
+  public static getClass() {
     return this
   }
 
@@ -172,6 +184,7 @@ export class AbstractValidatedTopic {
    * @memberof ValidatedTopic
    */
   public static getClassName(): string {
+    /* istanbul ignore next */
     return this.toString().split ('(' || /s+/)[0].split (' ' || /s+/)[1]
   }
 
@@ -185,19 +198,44 @@ export class AbstractValidatedTopic {
    *
    * @memberof ValidatedTopic
    */
-  public static async create(state: mage.core.IState, index?: archivist.IArchivistIndex, data?: any) {
+  public static async create(state: mage.core.IState, index: archivist.IArchivistIndex, data?: any): Promise<any> {
     const classInstance = this.getClass()
+    let instance
 
-    // Todo: not sure why the oveload on plainToClass is not picked correctly
-    const instance: any = classTransformer.plainToClass(classInstance, data || {})
-
-    instance.setState(state)
-
-    if (index) {
-      instance.setIndex(index)
+    if (data) {
+      instance = classTransformer.plainToClass<ValidatedTopic, Object>(classInstance, data)
+    } else {
+      instance = new classInstance()
     }
 
+    instance.setState(state)
+    await instance.setIndex(index)
+
     return instance
+  }
+
+  /**
+   * Utility method used to promisify archivist calls
+   *
+   * @static
+   * @param {*} state
+   * @param {*} method
+   * @param {any[]} args
+   * @param {Function} run
+   * @returns
+   *
+   * @memberof ValidatedTopic
+   */
+  public static async execute(state: any, method: any, args: any[], run: Function): Promise<any> {
+    return new Promise((resolve, reject) => {
+      state.archivist[method](...args, (error: any, data: any) => {
+        if (error) {
+          return reject(error)
+        }
+
+        resolve(run(data))
+      })
+    })
   }
 
   /**
@@ -213,19 +251,14 @@ export class AbstractValidatedTopic {
    *
    * @memberof ValidatedTopic
    */
-  public static async get(state: mage.core.IState, index: archivist.IArchivistIndex, options?: archivist.IArchivistGetOptions) {
+  public static async get(state: mage.core.IState, index: archivist.IArchivistIndex, options?: archivist.IArchivistGetOptions): Promise<any> {
     const topicName = this.getClassName()
 
-    return new Promise((resolve, reject) => {
-      state.archivist.get(topicName, index, options, async (error, data) => {
-        if (error) {
-          return reject(error)
-        }
-
-        const instance = await this.create(state, index, data)
-        resolve(instance)
-      })
-    })
+    return this.execute(state, 'get', [
+      topicName,
+      index,
+      options
+    ], (data: any) => this.create(state, index, data))
   }
 
   /**
@@ -241,25 +274,25 @@ export class AbstractValidatedTopic {
    *
    * @memberof ValidatedTopic
    */
-  public static async mget(state: mage.core.IState, queries: archivist.IArchivistQuery[], options?: archivist.IArchivistGetOptions) {
-    return new Promise((resolve, reject) => {
-      state.archivist.mget(queries, options, async (error, list) => {
-        if (error) {
-          return reject(error)
-        }
+  public static async mget(state: mage.core.IState, indexes: archivist.IArchivistIndex[], options?: archivist.IArchivistGetOptions): Promise<any[]> {
+    const topic = this.getClassName()
+    const queries: archivist.IArchivistQuery[] = indexes.map((index) => ({ topic, index }))
 
-        const instances = []
+    return this.execute(state, 'mget', [
+      queries,
+      options
+    ], async (list: any) => {
+      const instances = []
 
-        for (let d = 0; d < list.length; d += 1) {
-          const data = list[d]
-          const index = queries[d].index
-          const instance = await this.create(state, index, data)
+      for (let d = 0; d < list.length; d += 1) {
+        const data = list[d]
+        const index = queries[d].index
+        const instance = await this.create(state, index, data)
 
-          instances.push(instance)
-        }
+        instances.push(instance)
+      }
 
-        resolve(instances)
-      })
+      return instances
     })
   }
 
@@ -300,15 +333,11 @@ export class AbstractValidatedTopic {
   public static async list(state: mage.core.IState, partialIndex: archivist.IArchivistIndex, options?: archivist.IArchivistListOptions) {
     const topicName = this.getClassName()
 
-    return new Promise((resolve, reject) => {
-      state.archivist.list(topicName, partialIndex, options, (error, indexes) => {
-        if (error) {
-          return reject(error)
-        }
-
-        resolve(indexes)
-      })
-    })
+    return this.execute(state, 'list', [
+      topicName,
+      partialIndex,
+      options,
+    ], (indexes: archivist.IArchivistIndex[]) => indexes)
   }
 
   /**
@@ -328,18 +357,11 @@ export class AbstractValidatedTopic {
   public static async query(state: mage.core.IState, partialIndex: archivist.IArchivistIndex, options?: archivist.IArchivistGetOptions) {
     const topicName = this.getClassName()
 
-    return new Promise((resolve, reject) => {
-      state.archivist.list(topicName, partialIndex, (error, indexes) => {
-        if (error) {
-          return reject(error)
-        }
-
-        const queries = indexes.map(function (index) {
-          return { topic: topicName, index }
-        })
-
-        resolve(this.mget(state, queries, options))
-      })
+    return this.execute(state, 'list', [
+      topicName,
+      partialIndex
+    ], (indexes: archivist.IArchivistIndex[]) => {
+      return this.mget(state, indexes, options)
     })
   }
 
@@ -350,17 +372,13 @@ export class AbstractValidatedTopic {
    *
    * @memberof ValidatedTopic
    */
-  constructor(state?: mage.core.IState, index?: archivist.IArchivistIndex) {
+  constructor(state?: mage.core.IState) {
     Object.defineProperty(this, '_topic', {
       value: this.constructor.name
     })
 
     if (state) {
       this.setState(state)
-    }
-
-    if (index) {
-      this.setIndex(index)
     }
   }
 
@@ -391,9 +409,19 @@ export class AbstractValidatedTopic {
    *
    * @param {archivist.IArchivistIndex} index
    *
-   * @memberof AbstractValidatedTopic
+   * @memberof ValidatedTopic
    */
-  public setIndex(index: archivist.IArchivistIndex) {
+  public async setIndex(indexData: archivist.IArchivistIndex) {
+    const Class: any = this.constructor
+    const Index = Class.indexType
+    const index = new Index()
+
+    for (const field of Class.index) {
+      index[field] = indexData[field]
+    }
+
+    await classValidator.validate(index).then((errors) => throwOnError(errors))
+
     Object.defineProperty(this, '_index', {
       value: index
     })
@@ -415,7 +443,7 @@ export class AbstractValidatedTopic {
    *
    * @param {mage.core.IState} state
    *
-   * @memberof AbstractValidatedTopic
+   * @memberof ValidatedTopic
    */
   public setState(state: mage.core.IState) {
     Object.defineProperty(this, '_state', {
@@ -505,42 +533,9 @@ export class AbstractValidatedTopic {
    * @memberof ValidatedTopic
    */
   public async validate(): Promise<classValidatorError.ValidationError[]> {
-    return classValidator.validate(this)
+    return classValidator.validate(this).then((errors) => throwOnError(errors))
   }
 }
-
-/**
- * IValidatedTopic interface
- *
- * @export
- * @interface IValidatedTopic
- */
-export interface IValidatedTopic {
-    // Static properties used as configuration by MAGE
-    indexType: {},
-    index: string[]
-    vaults: {[name: string]: archivist.IArchivistTopicVaultConfiguration}
-    readOptions?: archivist.IArchivistGetOptions
-    // Instance methods (mostly for storing and validatating data)
-    new(state: mage.core.IState, index: archivist.IArchivistIndex): AbstractValidatedTopic
-    afterLoad?(): void
-    beforeDistribute?(): void
-
-    // Factory methods (mostly for getting data) and helpers
-    getClass(): typeof AbstractValidatedTopic
-    getClassName(): string
-    create<T>(state: mage.core.IState, data: any): Promise<T>
-    create<T>(state: mage.core.IState, index: archivist.IArchivistIndex, data: any): Promise<T>
-    get<T>(state: mage.core.IState, index: archivist.IArchivistIndex, options?: archivist.IArchivistGetOptions): Promise<T>
-    mget<T>(state: mage.core.IState, queries: archivist.IArchivistQuery[], options?: archivist.IArchivistGetOptions): Promise<T>
-    list<T>(state: mage.core.IState, partialIndex: archivist.IArchivistIndex, options?: archivist.IArchivistListOptions): Promise<T>
-    query<T>(state: mage.core.IState, partialIndex: archivist.IArchivistIndex, options?: archivist.IArchivistGetOptions): Promise<T>
-}
-
-/**
- * Validated topic
- */
-export const ValidatedTopic: IValidatedTopic = AbstractValidatedTopic as IValidatedTopic
 
 /**
  * @Acl decorator
@@ -554,7 +549,10 @@ export const ValidatedTopic: IValidatedTopic = AbstractValidatedTopic as IValida
 export function Acl(...acl: string[]) {
   return function (UserCommand: any, key: string) {
     if (key !== 'execute') {
-      throw new Error('@validate only works for usercommand.execute functions')
+      throw crash('@validate only works for usercommand.execute functions', {
+        userCommand: UserCommand,
+        method: key
+      })
     }
 
     UserCommand.acl = acl
@@ -581,14 +579,16 @@ export function Acl(...acl: string[]) {
         const casted = await Promise.all(args.map(async (arg, pos) => {
           const realPos = pos + 1
           const parameterName = parameterNames[realPos]
-          const type: IValidatedTopic = types[realPos]
+          const type = types[realPos]
           let instance
 
           // If the parameter type is an instance of ValidatedTopic,
           // we automatically use the state to instanciate; otherwise,
           // we use a normal plainToClass call
-          if (type.prototype instanceof AbstractValidatedTopic) {
-            instance = type.create(state, arg)
+          if (type.prototype instanceof ValidatedTopic) {
+            const index = arg.index || {}
+            delete arg.index
+            instance = await type.create(state, index, arg)
           } else {
             instance = classTransformer.plainToClass(type, arg)
           }

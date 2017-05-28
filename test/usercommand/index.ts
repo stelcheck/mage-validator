@@ -1,3 +1,3 @@
-describe('User commands and @acl decorator', function () {
-  it('todo')
+describe('User command utilities', function () {
+  require('./acl-decorator')
 })

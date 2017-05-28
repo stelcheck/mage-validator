@@ -8,3 +8,4 @@
 ._.DS_Store
 npm-debug.log
 /.nyc_output
+/coverage-report

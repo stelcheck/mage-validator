@@ -60,7 +60,6 @@ modules and attempt to load all topics defined in them.
 > `./lib/archivist/index.ts`
 
 ```typescript
-import * as mage from 'mage'
 import { loadTopicsFromModules } from 'mage-validator'
 
 loadTopicsFromModules(exports)
@@ -78,7 +77,7 @@ import { IsInt, Max } from 'class-validator';
 export default class {
     @IsInt()
     @Max(5)
-    public count: gems = 1
+    public count: gems = 1 // Default value
 }
 ```
 
@@ -122,28 +121,30 @@ configuration as static parameters:
 
 ```typescript
 import { ValidatedTopic } from 'mage-validator'
-import { ValidateNested, Validator, IsUUID, IsAlpha } from 'class-validator';
-import { Type } from 'class-transforme';
+import { ValidateNested, IsUUID, IsAlpha } from 'class-validator';
+import { Type } from 'class-transform';
 import PlayerData from '../types/PlayerData'
 
-const validator = new Validator()
+class Index {
+  @isUUID(5)
+  playerId: string
+}
 
-export class extends ValidatedTopic {
-    // Topic configuration is statically set
+export default class {
+    // Index configuration
     public static readonly index = ['playerId']
-    public static readonly vaults = { /* add your vault configuration here*/ }
+    public static readonly indexType = Index
 
+    // Vaults configuration (optional)
+    public static readonly vaults = {}
+    
+    // Attribute instances
     @IsAlpha()
     public name: string
 
     @ValidateNested()
     @Type(() => PlayerData)
     public data: PlayerData
-
-    setIndex(index: { playerId: string }) {
-        validator.isUUID(index.playerId, 5)
-        super.setIndex(index)
-    }
 }
 ```
 
@@ -182,15 +183,12 @@ import Player from '../topics/Player'
 export default class {
     @Acl('*')
     public static async execute(state: mage.core.IState, name: string) {
-        const index = { playerId: '123' }
-        const player = new Player(state, index)
-
+        const player: Player = Player.create(state, { playerId: '123' })
         player.name = name
         player.data = new PlayerData()
         player.data.gems = 5
-        player.add() // Same a state.archivist.add()
 
-        return player
+        return player.add() // Same a state.archivist.add()
     }
 }
 ```
@@ -208,7 +206,6 @@ to record any operations:
 import * as mage from 'mage'
 import { Acl } from 'mage-validator'
 import { ValidateNested } from 'class-validator'
-import PlayerData from '../types/PlayerData'
 import Player from '../topics/Player'
 
 export default class {
@@ -217,12 +214,7 @@ export default class {
 
     @Acl('*')
     public static async execute(state: mage.core.IState, player: Player) {
-        player.setIndex({ playerId: '123' })
-        player.name = name
-        player.data = new PlayerData()
-        player.data.gems = 5
         player.add()
-
         return player
     }
 }
