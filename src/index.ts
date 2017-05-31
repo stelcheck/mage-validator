@@ -134,7 +134,7 @@ export function loadTopicsFromModule(archivistExports: any, moduleName: string) 
       }
 
       // Add topic to the export of lib/archivist/index.ts
-      archivistExports[topicName] = require(topicPath)
+      archivistExports[topicName] = require(topicPath).default
       archivistExports[topicName]._module = moduleName
     })
   } catch (error) {

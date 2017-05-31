@@ -7,7 +7,7 @@ describe('loadTopicsFromModules', function () {
     loadTopicsFromModules(exports)
 
     assert.deepEqual(exports, {
-      topicOne: require('../fixtures/lib/modules/moduleThree/topics/topicOne')
+      topicOne: require('../fixtures/lib/modules/moduleThree/topics/topicOne').default
     })
   })
 })

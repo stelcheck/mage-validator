@@ -42,7 +42,7 @@ describe('loadTopicsFromModule', function () {
     loadTopicsFromModule(exports, 'moduleThree')
 
     assert.deepEqual(exports, {
-      topicOne: require('../fixtures/lib/modules/moduleThree/topics/topicOne')
+      topicOne: require('../fixtures/lib/modules/moduleThree/topics/topicOne').default
     })
   })
 })
