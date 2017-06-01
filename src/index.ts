@@ -594,7 +594,7 @@ export function Acl(...acl: string[]) {
           // If the parameter type is an instance of ValidatedTopic,
           // we automatically use the state to instanciate; otherwise,
           // we use a normal plainToClass call
-          if (type.prototype instanceof ValidatedTopic) {
+          if (arg && type.prototype instanceof ValidatedTopic) {
             const index = arg.index || {}
             delete arg.index
             instance = await type.create(state, index, arg)

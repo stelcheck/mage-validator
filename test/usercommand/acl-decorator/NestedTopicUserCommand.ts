@@ -1,8 +1,8 @@
 /* tslint:disable:no-console */
 import * as assert from 'assert'
 import * as mage from 'mage'
-import { Acl, ValidatedTopic } from '../../../src'
-import { IsNumberString, IsInt, Min, Max, ValidateNested } from 'class-validator'
+import { Acl, ValidatedTopic, ValidationError } from '../../../src'
+import { IsDefined, IsNumberString, IsInt, Min, Max, ValidateNested } from 'class-validator'
 
 /**
  * Index
@@ -39,6 +39,7 @@ class NestedTopicUserCommand {
   @IsInt()
   public increment: number
 
+  @IsDefined()
   @ValidateNested()
   public data: NestedTopic
 
@@ -57,6 +58,16 @@ describe('NestedTopicUserCommand', function () {
 
   const exec: any = NestedTopicUserCommand.execute
 
+  it('Undefined topic parameters are properly validated', async function () {
+    try {
+      await exec(state, undefined, 1)
+    } catch (error) {
+      assert(error instanceof ValidationError)
+      return
+    }
+
+    return new Error('Command should have failed upon input validation')
+  })
 
   it('Nested data is validated upon input', async function () {
     try {
