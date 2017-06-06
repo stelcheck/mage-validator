@@ -564,11 +564,17 @@ export function Acl(...acl: string[]) {
       })
     }
 
-    UserCommand.acl = acl
-
     const execute = <IExecuteFunction> UserCommand.execute
     const parameterNames = functionArguments(execute)
     const types = Reflect.getMetadata('design:paramtypes', UserCommand, key)
+
+    // We extract the state information, since we won't need it
+    parameterNames.shift()
+    types.shift()
+
+    // We attach additional information to the UserCommand class
+    UserCommand.acl = acl
+    UserCommand.params = parameterNames
 
     function validateObject(message: string, obj: any) {
       if (typeof obj === 'object') {
@@ -586,9 +592,8 @@ export function Acl(...acl: string[]) {
 
         // Cast parameters
         const casted = await Promise.all(args.map(async (arg, pos) => {
-          const realPos = pos + 1
-          const parameterName = parameterNames[realPos]
-          const type = types[realPos]
+          const parameterName = parameterNames[pos]
+          const type = types[pos]
           let instance
 
           // If the parameter type is an instance of ValidatedTopic,
