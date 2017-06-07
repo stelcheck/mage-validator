@@ -174,6 +174,8 @@ export function loadTopicsFromModule(archivistExports: any, moduleName: string) 
  * @class ValidatedTopic
  */
 export class ValidatedTopic {
+  public static readonly mediaType = 'application/json'
+
   public static readonly index: string[]
   public static readonly indexType: any
   public static readonly vaults = {}
