@@ -134,8 +134,14 @@ export function loadTopicsFromModule(archivistExports: any, moduleName: string) 
       }
 
       // Add topic to the export of lib/archivist/index.ts
-      archivistExports[topicName] = require(topicPath).default
-      archivistExports[topicName]._module = moduleName
+      const topic = archivistExports[topicName] = require(topicPath).default
+      topic._module = moduleName
+
+      // No explicit class name defined; we assign the name of the file as
+      // the class name used internally within the topic's methods
+      if (topic.getClassName().substring(0, 8) === 'default_') {
+        topic.setClassName(topicName)
+      }
     })
   } catch (error) {
     throwIfNotFileNotFoundError(error)
@@ -172,6 +178,8 @@ export class ValidatedTopic {
   public static readonly indexType: any
   public static readonly vaults = {}
 
+  private static _className: string
+
   /**
    * Return the current class
    *
@@ -194,7 +202,23 @@ export class ValidatedTopic {
    */
   public static getClassName(): string {
     /* istanbul ignore next */
-    return this.toString().split ('(' || /s+/)[0].split (' ' || /s+/)[1]
+    if (!this._className) {
+      return this.toString().split ('(' || /s+/)[0].split (' ' || /s+/)[1]
+    }
+
+    return this._className
+  }
+
+  /**
+   * Explicitly set the name of this class
+   *
+   * @static
+   * @param {string} name
+   *
+   * @memberof ValidatedTopic
+   */
+  public static setClassName(name: string): void {
+    this._className = name
   }
 
   /**
@@ -217,6 +241,7 @@ export class ValidatedTopic {
       instance = new classInstance()
     }
 
+    instance.setTopic(this.getClassName())
     instance.setState(state)
     await instance.setIndex(index)
 
@@ -382,9 +407,7 @@ export class ValidatedTopic {
    * @memberof ValidatedTopic
    */
   constructor(state?: mage.core.IState) {
-    Object.defineProperty(this, '_topic', {
-      value: this.constructor.name
-    })
+    this.setTopic(this.constructor.name)
 
     if (state) {
       this.setState(state)
@@ -398,6 +421,20 @@ export class ValidatedTopic {
    */
   public getTopic() {
     return <string> (<any> this)._topic
+  }
+
+  /**
+   * Set the topic name for this instance
+   *
+   * @param {string} topicName
+   *
+   * @memberof ValidatedTopic
+   */
+  public setTopic(topicName: string) {
+    Object.defineProperty(this, '_topic', {
+      value: topicName,
+      configurable: true
+    })
   }
 
   /**
@@ -432,7 +469,8 @@ export class ValidatedTopic {
     await classValidator.validate(index).then((errors) => throwOnError('Invalid index', errors))
 
     Object.defineProperty(this, '_index', {
-      value: index
+      value: index,
+      configurable: true
     })
   }
 
@@ -456,7 +494,8 @@ export class ValidatedTopic {
    */
   public setState(state: mage.core.IState) {
     Object.defineProperty(this, '_state', {
-      value: state
+      value: state,
+      configurable: true
     })
   }
 

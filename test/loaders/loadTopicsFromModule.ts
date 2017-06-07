@@ -45,4 +45,18 @@ describe('loadTopicsFromModule', function () {
       topicOne: require('../fixtures/lib/modules/moduleThree/topics/topicOne').default
     })
   })
+
+  it('Default exports are assigned a class name', function () {
+    const exports: any = {}
+    loadTopicsFromModule(exports, 'moduleThree')
+
+    assert.equal(exports.topicOne.getClassName(), 'topicOne')
+  })
+
+  it('Explicit class names on default exports are preserved', function () {
+    const exports: any = {}
+    loadTopicsFromModule(exports, 'moduleFour')
+
+    assert.equal(exports.topicThree.getClassName(), 'CustomName')
+  })
 })
