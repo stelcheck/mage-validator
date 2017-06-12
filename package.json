@@ -1,6 +1,6 @@
 {
   "name": "mage-validator",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Validation utility for MAGE user commands & topics (TypeScript)",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
@@ -10,7 +10,8 @@
     "prepublish": "run-s test build",
     "test:lint": " echo 'Check TypeScript code for style issues' &&   tslint --type-check --format codeFrame --project .",
     "test:cpd": "  echo 'Check the codebase for copy-pasted code' &&  jscpd --config .cpd.yaml",
-    "test:unit": " echo 'Run unit tests and check coverage level' &&  nyc --check-coverage --reporter=text --reporter=html mocha --compilers ts:ts-node/register -R mocha-reporter ./test/index.ts",
+    "test:unit": " echo 'Run unit tests' &&                           mocha --compilers ts:ts-node/register -R mocha-reporter ./test/index.ts",
+    "test:coverage": " echo 'Run unit tests and check coverage level' &&  nyc --check-coverage --reporter=text --reporter=html npm run test:unit",
     "test:git": "  echo 'Make sure all commits are signed' &&         git-signed",
     "test": "run-s test:*"
   },

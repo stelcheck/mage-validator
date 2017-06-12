@@ -1,8 +1,6 @@
 mage-validator
 ==============
 
-** Under heavy development **
-
 Validation system for MAGE topics and user command input types (TypeScript).
 
 Installation
