@@ -574,7 +574,7 @@ export class ValidatedTopic {
    *
    * @memberof ValidatedTopic
    */
-  public async add(mediaType: archivist.ArchivistMediaType, encoding: archivist.ArchivistEncoding, expirationTime?: number) {
+  public async add(mediaType?: archivist.ArchivistMediaType, encoding?: archivist.ArchivistEncoding, expirationTime?: number) {
     await this.validate()
     return this.getState().archivist.add(this.getTopic(), this.getIndex(), this.getData(), mediaType, encoding, expirationTime)
   }
@@ -591,7 +591,7 @@ export class ValidatedTopic {
    *
    * @memberof ValidatedTopic
    */
-  public async set(mediaType: archivist.ArchivistMediaType, encoding: archivist.ArchivistEncoding, expirationTime?: number) {
+  public async set(mediaType?: archivist.ArchivistMediaType, encoding?: archivist.ArchivistEncoding, expirationTime?: number) {
     await this.validate()
     return this.getState().archivist.set(this.getTopic(), this.getIndex(), this.getData(), mediaType, encoding, expirationTime)
   }
@@ -625,11 +625,11 @@ export class ValidatedTopic {
   /**
    * Validate the current instance
    *
-   * @returns {Promise<classValidatorError.ValidationError[]>}
+   * @returns {Promise<void>}
    *
    * @memberof ValidatedTopic
    */
-  public async validate(): Promise<classValidatorError.ValidationError[]> {
+  public async validate(): Promise<void> {
     return classValidator.validate(this).then((errors) => throwOnError('Invalid type', errors))
   }
 }
