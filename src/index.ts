@@ -283,14 +283,14 @@ export class ValidatedTopic {
    *
    * @memberof ValidatedTopic
    */
-  public static async execute<T>(
+  public static async execute<T, R>(
     this: IStaticThis<T>,
     state: any,
     method: any,
     args: any[],
-    run: (data: any) => any): Promise<T> {
+    run: (data: any) => any): Promise<R> {
 
-    return new Promise<T>((resolve, reject) => {
+    return new Promise<R>((resolve, reject) => {
       state.archivist[method](...args, (error: Error, data: T) => {
         if (error) {
           return reject(error)

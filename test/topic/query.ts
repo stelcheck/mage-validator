@@ -11,7 +11,7 @@ describe('query', function () {
 
   it('Returns a topic instance', async function () {
     const options = {
-      ok: 'computer'
+      optional: true
     }
     const queriesArray = [
       { id: '1' }
@@ -29,7 +29,7 @@ describe('query', function () {
     mockStateArchivistMethod(state, 'mget', data, function (queries: mage.archivist.IArchivistQuery[], opts: any) {
       assert.equal(queries[0].topic, 'TestTopic')
       assert.equal(queries[0].index.id, 1)
-      assert.equal(opts.ok, options.ok)
+      assert.equal(opts.optional, options.optional)
     })
 
     const topics: TestTopic[] = await TestTopic.query(state, { id: '1' }, options)

@@ -32,13 +32,13 @@ describe('mget', function () {
   it('Options are passed to state.archivist.mget', async function () {
     const data: any[] = []
     const options = {
-      ok: 'computer'
+      optional: true
     }
 
     mockStateArchivistMethod(state, 'mget', data, function (queries: mage.archivist.IArchivistQuery[], opts: any) {
       assert.equal(queries[0].topic, 'TestTopic')
       assert.equal(queries[0].index.id, 1)
-      assert.equal(opts.ok, options.ok)
+      assert.equal(opts.optional, options.optional)
     })
 
     return await TestTopic.mget(state, [{ id: '1' }], options)
