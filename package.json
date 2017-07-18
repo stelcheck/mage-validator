@@ -55,6 +55,8 @@
   "devDependencies": {
     "@types/mocha": "2.2.41",
     "@types/node": "7.0.21",
+    "class-transformer": "0.1.6",
+    "class-validator": "0.7.0",
     "git-message": "1.0.3",
     "git-signed": "0.0.2",
     "jscpd": "0.6.11",
@@ -68,8 +70,6 @@
     "typescript": "2.4.1"
   },
   "dependencies": {
-    "class-transformer": "0.1.6",
-    "class-validator": "0.7.0",
     "deep-iterator": "1.1.0",
     "function-arguments": "1.0.8",
     "is-there": "4.4.2",

@@ -671,7 +671,11 @@ export function Acl(...acl: string[]) {
     UserCommand.params = parameterNames
 
     async function validateObject(message: string, obj: any) {
-      return classValidator.validate(obj).then((errors) => throwOnError(message, errors, obj))
+      if (typeof obj === 'object') {
+        return classValidator.validate(obj).then((errors) => throwOnError(message, errors, obj))
+      }
+
+      return obj
     }
 
     return {

@@ -7,16 +7,13 @@ Installation
 -------------
 
 ```shell
-npm install --save mage-validator
+npm install --save mage-validator class-validator class-transformer
 ```
 
-You will also likely want to install `class-validator` so that you may add 
-validation decorators to your data class, and `class-transformer` to
-have more control over datastructure of user commands incoming data.
+You need to install two peer dependencies alongside `mage-validator`:
 
-```shell
-npm install --save class-validator class-transformer
-```
+  1. `class-validator` so that you may add validation decorators to your data class
+  2. `class-transformer` to control how the received data will be deserialised
 
 Usage
 -----
