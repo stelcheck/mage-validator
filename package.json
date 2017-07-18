@@ -1,6 +1,6 @@
 {
   "name": "mage-validator",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Validation utility for MAGE user commands & topics (TypeScript)",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
@@ -72,6 +72,7 @@
     "class-validator": "0.7.0",
     "function-arguments": "1.0.8",
     "is-there": "4.4.2",
+    "isobject": "3.0.1",
     "reflect-metadata": "0.1.10"
   }
 }

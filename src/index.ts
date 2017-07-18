@@ -6,6 +6,7 @@ import * as mage from 'mage'
 import * as path from 'path'
 
 const functionArguments = require('function-arguments')
+const isObject = require('isobject')
 
 import 'reflect-metadata'
 
@@ -259,6 +260,10 @@ export class ValidatedTopic {
     let instance
 
     if (data) {
+      if (!isObject(data)) {
+        throw new Error(`Received data is not an object (received ${JSON.stringify(data)})`)
+      }
+
       instance = classTransformer.plainToClass<T, object>(this, data)
     } else {
       instance = new this()
