@@ -34,7 +34,7 @@ describe('loadTopicsFromModule', function () {
       return
     }
 
-    return new Error('topics loading should have failed')
+    throw new Error('topics loading should have failed')
   })
 
   it('Loads topics (and ignores JavaScript files)', function () {

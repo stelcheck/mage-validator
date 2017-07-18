@@ -3,6 +3,7 @@ import * as assert from 'assert'
 import * as mage from 'mage'
 import { Acl, ValidatedTopic, ValidationError } from '../../../src'
 import { IsDefined, IsNumberString, IsInt, Min, Max, ValidateNested } from 'class-validator'
+import { Type } from 'class-transformer'
 
 /**
  * Index
@@ -41,11 +42,11 @@ class NestedTopicUserCommand {
 
   @IsDefined()
   @ValidateNested()
+  @Type(() => NestedTopic)
   public data: NestedTopic
 
   @Acl('*')
-  public static async execute(state: mage.core.IState, data: NestedTopic, increment: number) {
-    console.log(state)
+  public static async execute(_state: mage.core.IState, data: NestedTopic, increment: number) {
     data.count += increment
     return data
   }
@@ -66,7 +67,7 @@ describe('NestedTopicUserCommand', function () {
       return
     }
 
-    return new Error('Command should have failed upon input validation')
+    throw new Error('Command should have failed upon input validation')
   })
 
   it('Nested data is validated upon input', async function () {
@@ -79,7 +80,7 @@ describe('NestedTopicUserCommand', function () {
       return
     }
 
-    return new Error('Command should have failed upon input validation')
+    throw new Error('Command should have failed upon input validation')
   })
 
   it('Output data structures are validated upon return', async function () {
@@ -92,7 +93,7 @@ describe('NestedTopicUserCommand', function () {
       return
     }
 
-    return new Error('Command should have failed upon output validation')
+    throw new Error('Command should have failed upon output validation')
   })
 
   it('Topic index is validated', async function () {
@@ -105,7 +106,7 @@ describe('NestedTopicUserCommand', function () {
       return
     }
 
-    return new Error('Command should have failed upon output validation')
+    throw new Error('Command should have failed upon output validation')
   })
 
   it('If index is missing, we default to an empty index', async function () {
@@ -117,7 +118,7 @@ describe('NestedTopicUserCommand', function () {
       return
     }
 
-    return new Error('Command should have failed upon output validation')
+    throw new Error('Command should have failed upon output validation')
   })
 
   it('Valid data structures are returned', async function () {

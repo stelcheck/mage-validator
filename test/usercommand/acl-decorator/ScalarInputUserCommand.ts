@@ -32,7 +32,7 @@ describe('ScalarInputUserCommand', function () {
       return
     }
 
-    return new Error('User command validation should have failed')
+    throw new Error('User command validation should have failed')
   })
 
   it('Execution succeeds if input is valid', async function () {

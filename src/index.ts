@@ -7,6 +7,7 @@ import * as path from 'path'
 
 const functionArguments = require('function-arguments')
 const isObject = require('isobject')
+const deepIterator = require('deep-iterator').default
 
 import 'reflect-metadata'
 
@@ -669,50 +670,55 @@ export function Acl(...acl: string[]) {
     UserCommand.acl = acl
     UserCommand.params = parameterNames
 
-    function validateObject(message: string, obj: any) {
-      if (typeof obj === 'object') {
-        return classValidator.validate(obj).then((errors) => throwOnError(message, errors, obj))
-      }
-
-      return obj
+    async function validateObject(message: string, obj: any) {
+      return classValidator.validate(obj).then((errors) => throwOnError(message, errors, obj))
     }
 
     return {
       value: async (state: mage.core.IState, ...args: any[]) => {
-        // Create an instance of UserCommand which we will
-        // use to validate parameters
-        const userCommand = new UserCommand()
-
-        // Cast parameters
-        const casted = await Promise.all(args.map(async (arg, pos) => {
+        // Map user command's parameters
+        const userCommandData: { [key: string]: any } = {}
+        args.forEach((arg, pos) => {
           const parameterName = parameterNames[pos]
-          const type = types[pos]
-          let instance
+          userCommandData[parameterName] = arg
+        })
 
-          // If the parameter type is an instance of ValidatedTopic,
-          // we automatically use the state to instanciate; otherwise,
-          // we use a normal plainToClass call
-          if (arg && type.prototype instanceof ValidatedTopic) {
-            const index = arg.index || {}
-            delete arg.index
-            instance = await type.create(state, index, arg)
-          } else {
-            instance = classTransformer.plainToClass(type, arg)
+        // Cast data into a user command instance
+        const userCommand = classTransformer.plainToClass(UserCommand, userCommandData)
+        for (const { value } of deepIterator(userCommand)) {
+          if (value instanceof ValidatedTopic) {
+            value.setState(state)
+
+            const index = (<any> value).index || {}
+
+            await value.setIndex(index)
+            delete (<any> value).index
           }
+        }
 
-          userCommand[parameterName] = instance
-
-          return instance
-        }))
-
-        // Validate parameters
+        // Validate all parameters at once
         await validateObject('Invalid user command input', userCommand)
 
+        // Map casted parameters into an array of arguments
+        const castedArgs = args.map((_arg, pos) => {
+          const parameterName = parameterNames[pos]
+          return (<any> userCommand)[parameterName]
+        })
+
         // Execute the actual user command
-        const output = await execute(state, ...casted)
+        const output = await execute(state, ...castedArgs)
 
         // Validate the returned value
-        return await validateObject('Invalid user command return value', output)
+        if (!Array.isArray(output)) {
+          return validateObject('Invalid user command return value', output)
+        }
+
+        // In the case of arrays, validate each entries
+        for (const [pos, val] of output.entries()) {
+          await validateObject(`Invalid user command return value in array (index: ${pos})`, val)
+        }
+
+        return output
       }
     }
   }

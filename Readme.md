@@ -86,7 +86,8 @@ Which then can be used as user commands types:
 ```typescript
 import * as mage from 'mage'
 import { Acl } from 'mage-validator'
-import { IsInt, Max, ValidateNested } from 'class-validator';
+import { IsInt, Max, ValidateNested } from 'class-validator'
+import { Type } from 'class-transformer'
 import PlayerData from '../types/PlayerData'
 
 export default class {
@@ -95,6 +96,7 @@ export default class {
     public gemRegisterBonus: number
 
     @ValidateNested()
+    @Type(() => PlayerData)
     public data: PlayerData
 
     @Acl('*')
@@ -121,7 +123,7 @@ configuration as static parameters:
 import { ValidatedTopic } from 'mage-validator'
 import { ValidateNested, IsUUID, IsAlpha } from 'class-validator';
 import { Type } from 'class-transform';
-import PlayerData from '../types/PlayerData'
+import PlayerData from '../topics/PlayerData'
 
 class Index {
   @isUUID(5)
@@ -205,9 +207,11 @@ import * as mage from 'mage'
 import { Acl } from 'mage-validator'
 import { ValidateNested } from 'class-validator'
 import Player from '../topics/Player'
+import { Type } from 'class-transformer'
 
 export default class {
     @ValidateNested()
+    @Type(() => Player)
     public player: Player
 
     @Acl('*')

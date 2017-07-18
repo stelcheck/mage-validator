@@ -19,7 +19,7 @@ describe('create', function () {
       return
     }
 
-    return new Error('Did not fail')
+    throw new Error('Did not fail')
   })
 
   it('Create a new instance without data', async function () {
@@ -72,6 +72,6 @@ describe('create', function () {
       return
     }
 
-    return new Error('Validation did not fail')
+    throw new Error('Validation did not fail')
   })
 })

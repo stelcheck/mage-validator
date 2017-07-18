@@ -27,6 +27,6 @@ describe('IncorrectDecoratorUsage', function () {
       return
     }
 
-    return new Error('User command declaration should have failed')
+    throw new Error('User command declaration should have failed')
   })
 })
