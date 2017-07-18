@@ -7,13 +7,25 @@ Installation
 -------------
 
 ```shell
-npm install --save mage-validator class-validator class-transformer
+npm install --save mage-validator class-validator class-transformer reflect-metadata
 ```
 
 You need to install two peer dependencies alongside `mage-validator`:
 
   1. `class-validator` so that you may add validation decorators to your data class
   2. `class-transformer` to control how the received data will be deserialised
+  3. `relfect-metadata` will be needed by the two modules above to extract type information
+
+
+You will also need to make sure that the following configuration is set in your
+`tsconfig.json`:
+
+```json
+{
+  "experimentalDecorators": true,
+  "emitDecoratorMetadata": true
+}
+```
 
 Usage
 -----
