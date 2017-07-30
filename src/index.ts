@@ -173,6 +173,12 @@ export interface IStaticThis<T> {
     index: archivist.IArchivistIndex,
     data?: any): Promise<T>,
 
+  get<T extends ValidatedTopic>(
+    this: IStaticThis<T>,
+    state: mage.core.IState,
+    indexes: archivist.IArchivistIndex,
+    options?: archivist.IArchivistGetOptions): Promise<T>
+
   mget<T extends ValidatedTopic>(
     this: IStaticThis<T>,
     state: mage.core.IState,
@@ -310,7 +316,10 @@ export class ValidatedTopic {
   /**
    * Get a topic instance from backend vault(s)
    *
-   * Mostly a wrapper around state.archivist.get.
+   * Mostly a wrapper around state.archivist.get. Note that
+   * instead of using the `optional` option directly with this call,
+   * you should consider using `tryGet` instead, which will trigger a
+   * compile error if you do not check for an undefined return value.
    *
    * @static
    * @param {mage.core.IState} state
@@ -332,7 +341,44 @@ export class ValidatedTopic {
       topicName,
       index,
       options
-    ], async (data: any) => this.create(state, index, data))
+    ], async (data: any) => {
+      // If optional: true, and no data was found
+      if (options && options.optional && !data) {
+        return undefined
+      }
+
+      return this.create(state, index, data)
+    })
+  }
+
+  /**
+   * Try to get a topic instance from backend vault(s)
+   *
+   * Same as `get`, but is also states that `undefined' might be returned instead.
+   * You should consider using this method instead of calling `get` directly
+   * with the `optional: true` option.
+   *
+   * @static
+   * @param {mage.core.IState} state
+   * @param {archivist.IArchivistIndex} index
+   * @param {archivist.IArchivistGetOptions} [options]
+   * @returns
+   *
+   * @memberof ValidatedTopic
+   */
+  public static async tryGet<T extends ValidatedTopic>(
+    this: IStaticThis<T>,
+    state: mage.core.IState,
+    index: archivist.IArchivistIndex,
+    options?: archivist.IArchivistGetOptions): Promise<T | undefined> {
+
+    if (!options) {
+      options = {}
+    }
+
+    options.optional = true
+
+    return this.get(state, index, options)
   }
 
   /**

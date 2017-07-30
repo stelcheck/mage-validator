@@ -3,11 +3,13 @@ import { Index, TestTopic } from '../'
 
 export { Index, TestTopic }
 
-export function mockStateArchivistMethod(state: mage.core.IState, name: string, data: any, call: (...args: any[]) => any) {
+export function mockStateArchivistMethod(state: mage.core.IState, name: string, data: any, call?: (...args: any[]) => any) {
   // Mocking archivist
   const archivist = (<any> state.archivist)
   archivist[name] = function (...args: any[]) {
-    call(...args)
+    if (call) {
+      call(...args)
+    }
 
     const callback = args[args.length - 1]
     if (callback instanceof Function) {
@@ -49,6 +51,7 @@ describe('Validated Topics', function () {
   require('./create')
   require('./execute')
   require('./get')
+  require('./tryGet')
   require('./mget')
   require('./list')
   require('./query')

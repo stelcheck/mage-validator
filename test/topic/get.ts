@@ -40,4 +40,18 @@ describe('get', function () {
 
     return await TestTopic.get(state, { id: '1' }, options)
   })
+
+  it('Options are passed to state.archivist.get', async function () {
+    const options = {
+      optional: true
+    }
+
+    mockStateArchivistMethod(state, 'get', null, function (topicName: string, index: any, opts: any) {
+      assert.equal(topicName, 'TestTopic')
+      assert.equal(index.id, 1)
+      assert.equal(opts.optional, options.optional)
+    })
+
+    return await TestTopic.get(state, { id: '1' }, options)
+  })
 })
