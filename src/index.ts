@@ -755,6 +755,11 @@ export function Acl(...acl: string[]) {
         const output = await execute(state, ...castedArgs)
 
         // Validate the returned value
+        const type = typeof output
+        if (type === 'string' || type === 'number') {
+          return output
+        }
+
         if (!Array.isArray(output)) {
           return validateObject('Invalid user command return value', output)
         }
