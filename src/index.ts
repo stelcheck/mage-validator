@@ -756,7 +756,7 @@ export function Acl(...acl: string[]) {
 
         // Validate the returned value
         const type = typeof output
-        if (type === 'string' || type === 'number') {
+        if (type !== 'object') {
           return output
         }
 
