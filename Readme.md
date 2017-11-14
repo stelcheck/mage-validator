@@ -157,6 +157,11 @@ export default class {
 }
 ```
 
+If you wish to use [tome](https://github.com/Wizcorp/node-tomes) instead, you can
+you can extend the `ValidatedTomeTopic` class instead. Unlike normal `tomes`, you will
+simply access and set object values directly (instead of using `assign`, `set`, `valueOf` 
+and so on).
+
 #### Loading topics
 
 > `./lib/modules/modulename/usercommands/getPlayer.ts`
