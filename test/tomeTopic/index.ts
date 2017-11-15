@@ -4,4 +4,5 @@ describe('tome topics', function () {
   require('./delete')
   require('./iterate')
   require('./validate')
+  require('./log')
 })

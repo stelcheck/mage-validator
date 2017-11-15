@@ -36,7 +36,7 @@
     "no-eval": true,
     "no-floating-promises": true,
     "no-invalid-template-strings": true,
-    "no-shadowed-variable": true,
+    "no-shadowed-variable": false,
     "no-string-throw": true,
     "no-switch-case-fall-through": true,
     "no-use-before-declare": true,

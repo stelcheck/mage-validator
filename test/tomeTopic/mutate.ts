@@ -11,6 +11,8 @@ const { Tome } = mage.require('tomes')
  * Nested type
  */
 class TestTome {
+  public num: number
+
   @IsNumberString()
   public childId: string
 
@@ -38,6 +40,8 @@ class Index {
 class TestTomeTopic extends ValidatedTomeTopic {
   public static readonly index = ['id']
   public static readonly indexType = Index
+
+  public num: number
 
   public name: string
 
@@ -126,5 +130,21 @@ describe('mutate', function () {
     assert.strictEqual(tTest.name, name)
     assert.strictEqual(tTest.child.childId, '10')
     assert.strictEqual(tTest.child.children[0].childId, '20')
+  })
+
+  it('increments works at the top level', async () => {
+    const tTest = await TestTomeTopic.create(state, { id: '1' })
+    tTest.num = 1
+    tTest.num += 4
+    assert.strictEqual(tTest.num, 5)
+  })
+
+  it('increments works on nested attributes', async () => {
+    const tTest = await TestTomeTopic.create(state, { id: '1' })
+    tTest.child = new TestTome()
+    tTest.child.num = 1
+    tTest.child.num += 4
+
+    assert.strictEqual(tTest.child.num, 5)
   })
 })
