@@ -4,7 +4,20 @@ import { defaultMetadataStorage } from 'class-transformer/storage'
 import { archivist } from 'mage'
 import * as mage from 'mage'
 
+import { inspect } from 'util'
+
 const { Tome, ObjectTome, ArrayTome } = mage.require('tomes')
+
+function createToString(tome: any) {
+  return () => JSON.stringify(Tome.unTome(tome))
+}
+
+function createInspect(tome: any, className: string) {
+  return (depth: number = 1, options: any = {}) => {
+    options.depth = depth
+    return className + ' -> ' + inspect(Tome.unTome(tome), options)
+  }
+}
 
 /**
  * Wrap tome and sub-tome instances intp proxies, allowing
@@ -34,15 +47,39 @@ function createTomeProxy(tome: any, ctor: any): any {
       get(target: any, key: any) {
         const val = target[key]
 
+        if (key === 'toString' || key === Symbol.toStringTag) {
+          return createToString(target)
+        }
+
+        // the type definition for util.inspect.custom seems to be missing
+        if (key === 'inspect' || key === (<any> inspect).custom) {
+          let name: string
+          if (ctor.name) {
+            name = ctor.name
+          } else if (ArrayTome.isArrayTome(target)) {
+            name = 'Array'
+          } else {
+            name = 'Object'
+          }
+
+          return createInspect(target, name)
+        }
+
         // Return the data structure's standard iterator
         if (key === Symbol.iterator) {
-          return target.valueOf().map((t: any) => {
-            if (ObjectTome.isObjectTome(t)) {
-              return createTomeProxy(t, ctor)
-            }
+          /* istanbul ignore else */
+          if (ArrayTome.isArrayTome(target)) {
+            return target.valueOf().map((t: any) => {
+              if (ObjectTome.isObjectTome(t)) {
+                return createTomeProxy(t, ctor)
+              }
 
-            return t.valueOf()
-          })[Symbol.iterator]
+              return t.valueOf()
+            })[Symbol.iterator]
+          }
+
+          /* istanbul ignore next*/
+          return target[Symbol.iterator]
         }
 
         // Return the correct constructor - we want
@@ -105,7 +142,7 @@ function createTomeProxy(tome: any, ctor: any): any {
               'reduceRight',
               'find',
               'findIndex' // !!!!
-            ].indexOf(key) > -1) {
+            ].includes(key)) {
               return function (...args: any[]) {
                 const iterator = args[0]
 
@@ -162,6 +199,7 @@ export default class ValidatedTomeTopic extends ValidatedTopic {
     data?: any): Promise<T> {
 
     const tome: any = Tome.isTome(data) ? data : Tome.conjure(data || {})
+    const className = this.getClassName()
     const instance = new this()
 
     // Create default values
@@ -172,7 +210,7 @@ export default class ValidatedTomeTopic extends ValidatedTopic {
       })
     }
 
-    instance.setTopic(this.getClassName())
+    instance.setTopic(className)
     instance.setState(state)
 
     await instance.setIndex(index)
@@ -185,6 +223,15 @@ export default class ValidatedTomeTopic extends ValidatedTopic {
        return { configurable: true, enumerable: true, value: this.get(target, key) }
       },
       get(target: any, key) {
+        if (key === 'toString' || key === Symbol.toStringTag) {
+          return createToString(tome)
+        }
+
+        // the type definition for util.inspect.custom seems to be missing
+        if (key === 'inspect' || key === (<any> inspect).custom) {
+          return createInspect(tome, className)
+        }
+
         /* istanbul ignore next */
         if (key === 'set' || key === 'del') {
           return target[key]

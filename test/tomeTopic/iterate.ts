@@ -8,6 +8,8 @@ import { ValidatedTomeTopic } from '../../src'
  */
 class TestTome {
   public childId: string
+
+  public list?: string[]
 }
 
 /**
@@ -24,6 +26,7 @@ class TestTomeTopic extends ValidatedTomeTopic {
   public static readonly index = ['id']
   public static readonly indexType = Index
 
+  public name: string
   public children: TestTome[]
 
   public list: string[]
@@ -34,7 +37,34 @@ class TestTomeTopic extends ValidatedTomeTopic {
 describe('iterate', function () {
   const state = new mage.core.State()
 
-  describe('object keys', function () {
+  describe('Object.values', function () {
+    it('lists top-level object values', async () => {
+      const tTest = await TestTomeTopic.create(state, { id: 'hello' })
+      tTest.name = 'hello'
+      tTest.list = ['1']
+
+      const vals = Object.values(tTest)
+
+      assert.strictEqual(vals[0], 'hello')
+      assert.strictEqual(vals[1][0], '1')
+      // assert.deepStrictEqual(vals, ['hello', ['1']])
+    })
+
+    it('lists nested object values', async () => {
+      const tTest = await TestTomeTopic.create(state, { id: 'hello' })
+      tTest.child = new TestTome()
+      tTest.child.childId = '2'
+      tTest.child.list = ['1']
+
+      const vals = Object.values(tTest.child)
+
+      assert.strictEqual(vals[0], '2')
+      assert.strictEqual(vals[1][0], '1')
+      // assert.deepStrictEqual(, ['1', ['1']])
+    })
+  })
+
+  describe('Object.keys', function () {
     it('lists top-level keys', async () => {
       const tTest = await TestTomeTopic.create(state, { id: 'hello' })
       tTest.list = []
@@ -43,12 +73,20 @@ describe('iterate', function () {
       assert.deepStrictEqual(Object.keys(tTest), ['list', 'children'])
     })
 
-    it('lists tome attributes keys', async () => {
+    it('lists nested tome keys', async () => {
       const tTest = await TestTomeTopic.create(state, { id: 'hello' })
       tTest.child = new TestTome()
       tTest.child.childId = '1'
 
       assert.deepStrictEqual(Object.keys(tTest.child), ['childId'])
+    })
+
+    it('lists nested array keys', async () => {
+      const tTest = await TestTomeTopic.create(state, { id: 'hello' })
+      tTest.child = new TestTome()
+      tTest.list = ['1']
+
+      assert.deepStrictEqual(Object.keys(tTest.list), ['0'])
     })
   })
 
@@ -157,6 +195,26 @@ describe('iterate', function () {
   })
 
   describe('map, forEach, etc', function () {
+    it('return values are accurate', async () => {
+      const tTest = await TestTomeTopic.create(state, { id: 'hello' })
+      const list = [
+        'a',
+        'list',
+        'of',
+        'words'
+      ]
+
+      tTest.list = list
+      const res = tTest.list.map((entry) => entry += ' good')
+
+      assert.deepStrictEqual(res, [
+        'a good',
+        'list good',
+        'of good',
+        'words good'
+      ])
+    })
+
     it('iteration works with literals', async () => {
       const tTest = await TestTomeTopic.create(state, { id: 'hello' })
       const list = [
