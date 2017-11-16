@@ -1,11 +1,32 @@
 import * as mage from 'mage'
 import * as assert from 'assert'
 
-import { ValidatedTomeTopic } from '../../src'
+import { ValidatedTomeTopic, ValidatedTopic } from '../../src'
 import { IsNumberString, IsUrl, ValidateNested } from 'class-validator'
 import { Type } from 'class-transformer'
 
 const { Tome } = mage.require('tomes')
+
+/**
+ * Topic index
+ */
+class Index {
+  @IsNumberString()
+  public id: string
+}
+
+/**
+ * Normal validated topic sharing a member of a type
+ * shared with a validated tome topic
+ */
+class TestTopic extends ValidatedTopic {
+  public static readonly index = ['id']
+  public static readonly indexType = Index
+
+  public child: TestTome
+
+  public garbage: any
+}
 
 /**
  * Nested type
@@ -24,15 +45,6 @@ class TestTome {
   @ValidateNested()
   public children: TestTome[]
 }
-
-/**
- * Topic index
- */
-class Index {
-  @IsNumberString()
-  public id: string
-}
-
 
 /**
  * Tome topic
@@ -146,5 +158,60 @@ describe('mutate', function () {
     tTest.child.num += 4
 
     assert.strictEqual(tTest.child.num, 5)
+  })
+
+  it('Moving an typed tome attribute from a tome topic to normal topic behaves correctly', async () => {
+    const tTest = await TestTomeTopic.create(state, { id: '1' })
+    tTest.child = new TestTome()
+    tTest.child.childId = '123'
+
+    const test = await TestTopic.create(state, { id: '1' })
+    test.child = tTest.child
+    await test.set()
+
+    const { loaded } = <any> state.archivist
+    state.archivist.get = (...args: any[]) => args.pop()(null, loaded.TestTopicoids1.data)
+
+    const retrievedTest = await TestTopic.get(state, { id: '1' })
+    assert.deepEqual(retrievedTest, {
+      child: {
+        childId: '123'
+      }
+    })
+  })
+
+  it('Moving an untyped tome attribute from a tome topic to normal topic behaves correctly', async () => {
+    const tTest = await TestTomeTopic.create(state, { id: '1' })
+    tTest.child = new TestTome()
+
+    /**
+     * Here we do a magic trick: we pass child to garbage (which
+     * typecasts the tome child as any), then append to it (while it is
+     * still a proxied tome in memory)
+     *
+     * The goal is to append anonymous data on the tome, set the parent topic,
+     * then try to load it from cache; it may fail if the proxy
+     * generator in ValidatedTomeTopic does not set a valid constructor
+     * for anonymous objects
+     */
+    const test = await TestTopic.create(state, { id: '1' })
+    test.garbage = tTest.child
+    test.garbage.kid = {
+      a: {
+        b: '123'
+      }
+    }
+
+    await test.set()
+
+    const { loaded } = <any> state.archivist
+    state.archivist.get = (...args: any[]) => args.pop()(null, loaded.TestTopicoids1.data)
+
+    const retrievedTest = await TestTopic.get(state, { id: '1' })
+    assert.deepEqual(retrievedTest.garbage.kid, {
+      a: {
+        b: '123'
+      }
+    })
   })
 })

@@ -3,6 +3,8 @@ import * as mage from 'mage'
 import { ValidatedTopic } from '../src'
 import { IsNumberString, IsUrl } from 'class-validator'
 
+const vaultValue = require('mage/lib/archivist/vaultValue')
+
 /**
  * Index used during unit tests
  *
@@ -36,22 +38,14 @@ describe('mage-validator', function () {
 
   before(function () {
     const mageInstance: any = mage
-    mageInstance.logger = {
-      emergency: {
-        data(data: any) {
-          return {
-            log(...args: any[]) {
-              console.log('mage.emergency', ...args, data)
-            }
-          }
-        }
-      }
-    }
+    mageInstance.logger = mage.core.logger
+    vaultValue.setup(mage.core.logger)
   })
 
   after(function () {
     const mageInstance: any = mage
     mageInstance.logger = oldLogger
+    vaultValue.setup(undefined)
   })
 
   require('./topic')

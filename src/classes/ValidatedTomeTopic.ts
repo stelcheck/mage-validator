@@ -110,7 +110,7 @@ function createTomeProxy(tome: any, ctor: any): any {
           return Array.prototype
         }
 
-        return ctor
+        return ctor.prototype || Object.prototype
       },
       get(target: any, key: any) {
         // Return a stringified object/array/etc
@@ -121,12 +121,10 @@ function createTomeProxy(tome: any, ctor: any): any {
         // the type definition for util.inspect.custom seems to be missing
         if (key === 'inspect' || key === (<any> inspect).custom) {
           let name: string
-          if (ctor.name) {
-            name = ctor.name
-          } else if (ArrayTome.isArrayTome(target)) {
+          if (ArrayTome.isArrayTome(target)) {
             name = 'Array'
           } else {
-            name = 'Object'
+            name = ctor.name
           }
 
           return createInspect(target, name)
@@ -170,7 +168,7 @@ function createTomeProxy(tome: any, ctor: any): any {
           }
 
           const typeInfo = defaultMetadataStorage.findTypeMetadata(ctor, <string> key)
-          const childCtor = typeInfo ? typeInfo.typeFunction() : {}
+          const childCtor = typeInfo ? typeInfo.typeFunction() : Object
 
           return createTomeProxy(target[key], childCtor)
         }
