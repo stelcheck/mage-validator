@@ -41,8 +41,6 @@ class TestTome {
   @ValidateNested()
   public child: TestTome
 
-  @Type(() => TestTome)
-  @ValidateNested()
   public children: TestTome[]
 }
 
@@ -67,6 +65,8 @@ class TestTomeTopic extends ValidatedTomeTopic {
   @Type(() => TestTome)
   @ValidateNested()
   public children: TestTome[]
+
+  public untypedChildren: TestTome[]
 }
 
 describe('mutate', function () {
@@ -180,7 +180,7 @@ describe('mutate', function () {
     })
   })
 
-  it('Moving an untyped tome attribute from a tome topic to normal topic behaves correctly', async () => {
+  it('Moving an untyped nested tome attribute from a tome topic to normal topic behaves correctly', async () => {
     const tTest = await TestTomeTopic.create(state, { id: '1' })
     tTest.child = new TestTome()
 
@@ -212,6 +212,27 @@ describe('mutate', function () {
       a: {
         b: '123'
       }
+    })
+  })
+
+  it('Slicing from top-level untyped tome attribute and inserting the value into a normal topic behaves correctly', async () => {
+    const tTest = await TestTomeTopic.create(state, { id: '1' }, {
+      untypedChildren: [{
+        childId: '123'
+      }]
+    })
+
+    const test = await TestTopic.create(state, { id: '1' })
+    test.child = tTest.untypedChildren.slice(0, 1)[0]
+
+    await test.set()
+
+    const { loaded } = <any> state.archivist
+    state.archivist.get = (...args: any[]) => args.pop()(null, loaded.TestTopicoids1.data)
+
+    const retrievedTest = await TestTopic.get(state, { id: '1' })
+    assert.deepEqual(retrievedTest.child, {
+      childId: '123'
     })
   })
 })

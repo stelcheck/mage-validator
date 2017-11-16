@@ -110,6 +110,7 @@ function createTomeProxy(tome: any, ctor: any): any {
           return Array.prototype
         }
 
+        /* istanbul ignore next  */
         return ctor.prototype || Object.prototype
       },
       get(target: any, key: any) {
@@ -264,7 +265,7 @@ export default class ValidatedTomeTopic extends ValidatedTopic {
 
         if (ObjectTome.isObjectTome(tome[key]) || ArrayTome.isArrayTome(tome[key])) {
           const typeInfo = defaultMetadataStorage.findTypeMetadata(target.constructor, <string> key)
-          const ctor = typeInfo ? typeInfo.typeFunction() : {}
+          const ctor = typeInfo ? typeInfo.typeFunction() : Object
 
           return createTomeProxy(tome[key], ctor)
         }
