@@ -35,6 +35,8 @@ class TestTopic extends ValidatedTomeTopic {
 
   public name: string
 
+  public num: number
+
   public list: string[]
 
   @Type(() => SubClass)
@@ -48,10 +50,13 @@ describe('log, inspect, etc', function () {
     const tTest = await TestTopic.create(state, { id: '1' })
     tTest.name = 'my name'
     tTest.list = ['b', 'c']
+    tTest.num = 1
 
-    const res = '{"name":"my name","list":["b","c"]}'
+    const res = '{"name":"my name","list":["b","c"],"num":1}'
     assert.strictEqual(tTest.toString(), res)
     assert.strictEqual((<any> tTest)[Symbol.toStringTag](), res)
+    assert.strictEqual(tTest.name.toString(), 'my name')
+    assert.strictEqual(tTest.num.toString(), '1')
   })
 
   it('Symbol(util.inspect.custom), custom', async () => {

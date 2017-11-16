@@ -3,6 +3,8 @@ import * as assert from 'assert'
 
 import { ValidatedTomeTopic } from '../../src'
 
+const { ObjectTome, StringTome } = mage.require('tomes')
+
 /**
  * Nested type
  */
@@ -253,6 +255,44 @@ describe('iterate', function () {
 
       assert.strictEqual(tTest.children[0].childId, '10')
       assert.strictEqual(tTest.children[1].childId, '30')
+    })
+
+    it('pop/shift returns a proxied tome', async () => {
+      const tTest = await TestTomeTopic.create(state, { id: 'hello' })
+      tTest.children = [{
+        childId: '1'
+      }]
+      tTest.list = [
+        '1'
+      ]
+
+      const child = tTest.children.pop()
+      const entry = tTest.list.pop()
+
+      assert.strictEqual(child instanceof ObjectTome, false)
+      assert.strictEqual(child instanceof Object, true)
+      assert.strictEqual(<any> entry instanceof StringTome, false)
+      assert.strictEqual(entry, '1')
+    })
+
+    it('slice/splice returns an array of proxied tomes', async () => {
+      const tTest = await TestTomeTopic.create(state, { id: 'hello' })
+      tTest.children = [{
+        childId: '1'
+      }]
+      tTest.list = [
+        '1'
+      ]
+
+      const child = tTest.children.slice(0, 1)
+      const entry = tTest.list.splice(0, 1, '2')
+
+      assert.strictEqual(child instanceof ObjectTome, false)
+      assert.strictEqual(child instanceof Object, true)
+      assert.strictEqual(child[0].childId, '1')
+      assert.strictEqual(<any> entry instanceof StringTome, false)
+      assert.deepStrictEqual(entry, ['1'])
+      assert.strictEqual(tTest.list[0], '2')
     })
   })
 })

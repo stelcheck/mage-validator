@@ -8,6 +8,30 @@ import { inspect } from 'util'
 
 const { Tome, ObjectTome, ArrayTome } = mage.require('tomes')
 
+const ARRAY_GET_METHODS = [
+  'pop',
+  'shift'
+]
+
+const ARRAY_SLICE_METHODS = [
+  'slice',
+  'splice'
+]
+
+const ARRAY_SEARCH_METHODS = [
+  'sort',
+  'includes',
+  'forEach',
+  'filter',
+  'map',
+  'every',
+  'some',
+  'reduce',
+  'reduceRight',
+  'find',
+  'findIndex'
+]
+
 function createToString(tome: any) {
   return () => JSON.stringify(Tome.unTome(tome))
 }
@@ -17,6 +41,51 @@ function createInspect(tome: any, className: string) {
     options.depth = depth
     return className + ' -> ' + inspect(Tome.unTome(tome), options)
   }
+}
+
+function proxifyOrUntome(t: any, ctor: any) {
+  if (ObjectTome.isObjectTome(t) || ArrayTome.isArrayTome(t) ) {
+    return createTomeProxy(t, ctor)
+  }
+
+  return t.valueOf()
+}
+
+function processArrayTomeMethodRequest(target: any, key: string, ctor: any) {
+  // Entries iterator
+  if (key === 'entries') {
+    return target
+      .map((t: any) => proxifyOrUntome(t, ctor))
+      .entries
+  }
+
+  // For pop, shift, etc
+  if (ARRAY_GET_METHODS.includes(key)) {
+    return (...args: any[]) => proxifyOrUntome(target[key](...args), ctor)
+  }
+
+  // For slice, splice, etc
+  if (ARRAY_SLICE_METHODS.includes(key)) {
+    return (...args: any[]) => target[key](...args)
+      .map((val: any) => proxifyOrUntome(val, ctor))
+  }
+
+  // For methods receiving a function as a first parameter (map, reduce, forEach, etc)
+  if (ARRAY_SEARCH_METHODS.includes(key)) {
+    return function (...args: any[]) {
+      const iterator = args[0]
+      args[0] = function (...iteratorArgs: any[]) {
+        iteratorArgs = iteratorArgs.map((t: any) => proxifyOrUntome(t, ctor))
+
+        return iterator(...iteratorArgs)
+      }
+
+      return target[key](...args)
+    }
+  }
+
+  // All other methods must be bound to the target
+  return target[key].bind(target)
 }
 
 /**
@@ -36,7 +105,6 @@ function createTomeProxy(tome: any, ctor: any): any {
           '__key__'
         ])
       },
-
       getPrototypeOf(target) {
         if (ArrayTome.isArrayTome(target)) {
           return Array.prototype
@@ -45,8 +113,7 @@ function createTomeProxy(tome: any, ctor: any): any {
         return ctor
       },
       get(target: any, key: any) {
-        const val = target[key]
-
+        // Return a stringified object/array/etc
         if (key === 'toString' || key === Symbol.toStringTag) {
           return createToString(target)
         }
@@ -69,13 +136,9 @@ function createTomeProxy(tome: any, ctor: any): any {
         if (key === Symbol.iterator) {
           /* istanbul ignore else */
           if (ArrayTome.isArrayTome(target)) {
-            return target.valueOf().map((t: any) => {
-              if (ObjectTome.isObjectTome(t)) {
-                return createTomeProxy(t, ctor)
-              }
-
-              return t.valueOf()
-            })[Symbol.iterator]
+            return target
+              .valueOf()
+              .map((t: any) => proxifyOrUntome(t, ctor))[Symbol.iterator]
           }
 
           /* istanbul ignore next*/
@@ -92,6 +155,8 @@ function createTomeProxy(tome: any, ctor: any): any {
 
           return ctor
         }
+
+        const val = target[key]
 
         // Return the value if it is not defined
         if (val === undefined) {
@@ -110,63 +175,13 @@ function createTomeProxy(tome: any, ctor: any): any {
           return createTomeProxy(target[key], childCtor)
         }
 
-        // Mangle functions so that they keep the proper
+        // Mangle array functions so that they keep the proper
         // context and proxy siblings when needed
-        if (typeof val === 'function') {
-          // If the current target is an ArrayTome, we need to
-          // change the normal behavior of the methods listed below
-          // to make it so that they return proxied tome instances
-          // instead of the normal values
-
-          /* istanbul ignore else */
-          if (ArrayTome.isArrayTome(target)) {
-            if (key === 'entries') {
-              return target.map((t: any) => {
-                if (ObjectTome.isObjectTome(t)) {
-                  return createTomeProxy(t, ctor)
-                }
-
-                return t.valueOf()
-              }).entries
-            }
-
-            if ([
-              'sort',
-              'includes',
-              'forEach',
-              'filter',
-              'map',
-              'every',
-              'some',
-              'reduce',
-              'reduceRight',
-              'find',
-              'findIndex' // !!!!
-            ].includes(key)) {
-              return function (...args: any[]) {
-                const iterator = args[0]
-
-                args[0] = function (...iteratorArgs: any[]) {
-                  iteratorArgs = iteratorArgs.map((t: any) => {
-                    if (ObjectTome.isObjectTome(t)) {
-                      return createTomeProxy(t, ctor)
-                    }
-
-                    return t.valueOf()
-                  })
-
-                  return iterator(...iteratorArgs)
-                }
-
-                return target[key](...args)
-              }
-            }
-          }
-
-          // In all other cases, bind the returned method
-          // to the current target
-          return val.bind(target)
+        if (typeof val === 'function' && ArrayTome.isArrayTome(target)) {
+          return processArrayTomeMethodRequest(target, key, ctor)
         }
+
+        // TODO: map object method calls to their "real" prototype
 
         // In all other cases, return the underlying value of the attribute
         return val.valueOf()
