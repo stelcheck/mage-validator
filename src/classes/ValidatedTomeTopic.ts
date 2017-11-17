@@ -88,11 +88,25 @@ function processArrayTomeMethodRequest(target: any, key: string, ctor: any) {
   return target[key].bind(target)
 }
 
+function extractType(typeInfo: any, typeMap: any, key: any) {
+  if (typeInfo) {
+    return typeInfo.typeFunction()
+  }
+
+  if (typeMap[key]) {
+    return typeMap[key]
+  }
+
+  return Object
+}
+
 /**
  * Wrap tome and sub-tome instances intp proxies, allowing
  * for direct access to attributes
  */
 function createTomeProxy(tome: any, ctor: any): any {
+  const typeMap: any = {}
+
   return new Proxy(tome, {
       ownKeys(target) {
         return Object.keys(target).concat([
@@ -169,7 +183,7 @@ function createTomeProxy(tome: any, ctor: any): any {
           }
 
           const typeInfo = defaultMetadataStorage.findTypeMetadata(ctor, <string> key)
-          const childCtor = typeInfo ? typeInfo.typeFunction() : Object
+          const childCtor = extractType(typeInfo, typeMap, key)
 
           return createTomeProxy(target[key], childCtor)
         }
@@ -187,6 +201,7 @@ function createTomeProxy(tome: any, ctor: any): any {
       },
       set(target: any, key: string, value) {
         target.set(key, value)
+        typeMap[key] = value.constructor
 
         return true
       },
@@ -215,6 +230,7 @@ export default class ValidatedTomeTopic extends ValidatedTopic {
     const tome: any = Tome.isTome(data) ? data : Tome.conjure(data || {})
     const className = this.getClassName()
     const instance = new this()
+    const typeMap: any = {}
 
     // Create default values
     if (!data) {
@@ -265,7 +281,7 @@ export default class ValidatedTomeTopic extends ValidatedTopic {
 
         if (ObjectTome.isObjectTome(tome[key]) || ArrayTome.isArrayTome(tome[key])) {
           const typeInfo = defaultMetadataStorage.findTypeMetadata(target.constructor, <string> key)
-          const ctor = typeInfo ? typeInfo.typeFunction() : Object
+          const ctor = extractType(typeInfo, typeMap, key)
 
           return createTomeProxy(tome[key], ctor)
         }
@@ -274,6 +290,8 @@ export default class ValidatedTomeTopic extends ValidatedTopic {
       },
       set(_target: any, key, value) {
         tome.set(key, value)
+        typeMap[key] = value.constructor
+
         return true
       },
       deleteProperty(target, key) {

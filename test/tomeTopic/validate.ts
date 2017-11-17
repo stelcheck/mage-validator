@@ -2,7 +2,7 @@ import * as mage from 'mage'
 import * as assert from 'assert'
 
 import { ValidatedTomeTopic } from '../../src'
-import { IsNumberString, IsUrl, ValidateNested } from 'class-validator'
+import { IsNumberString, IsUrl, validate, ValidateNested } from 'class-validator'
 import { Type } from 'class-transformer'
 
 /**
@@ -53,6 +53,8 @@ class TestTomeTopic extends ValidatedTomeTopic {
     each: true
   })
   public list: string[]
+
+  public untypedChild: TestTome
 }
 
 describe('validate', function () {
@@ -155,5 +157,16 @@ describe('validate', function () {
     }
 
     throw new Error('Did not throw')
+  })
+
+  it('adding a typed value to a validated tome attribute and validating that attribute should work', async () => {
+    const tTest = await TestTomeTopic.create(state, { id: '1' })
+    const child = (<any> new TestTome())
+    child.childId = 'not a string number'
+
+    tTest.untypedChild = child
+
+    const errors = await validate(tTest.untypedChild)
+    assert.equal(errors.length, 1)
   })
 })
