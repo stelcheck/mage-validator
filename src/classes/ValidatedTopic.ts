@@ -4,7 +4,7 @@ import * as classValidator from 'class-validator'
 import { archivist } from 'mage'
 import * as mage from 'mage'
 
-import { throwOnError } from '../errors'
+import { ValidationError } from '../errors'
 
 const isObject = require('isobject')
 
@@ -425,7 +425,14 @@ export default class ValidatedTopic {
       index[field] = indexData[field]
     }
 
-    await classValidator.validate(index).then((errors) => throwOnError('Invalid index', errors))
+    const errors = await classValidator.validate(index)
+
+    if (errors.length > 0) {
+      throw new ValidationError('Index validation failed', 'server', {
+        topic: this.getTopic(),
+        index: this.getIndex()
+      }, errors)
+    }
 
     Object.defineProperty(this, '_index', {
       value: index,
@@ -466,7 +473,7 @@ export default class ValidatedTopic {
    * Essentially a wrapper for state.archivist.add
    */
   public async add(mediaType?: archivist.ArchivistMediaType, encoding?: archivist.ArchivistEncoding, expirationTime?: number) {
-    await this.validate()
+    await this.validate('Validation failed on add')
     return this.getState().archivist.add(this.getTopic(), this.getIndex(), this.getData(), mediaType, encoding, expirationTime)
   }
 
@@ -476,7 +483,7 @@ export default class ValidatedTopic {
    * Essentially a wrapper for state.archivist.set.
    */
   public async set(mediaType?: archivist.ArchivistMediaType, encoding?: archivist.ArchivistEncoding, expirationTime?: number) {
-    await this.validate()
+    await this.validate('Validation failed on set')
     return this.getState().archivist.set(this.getTopic(), this.getIndex(), this.getData(), mediaType, encoding, expirationTime)
   }
 
@@ -486,7 +493,7 @@ export default class ValidatedTopic {
    * Essentially a wrapper for state.archivist.touch.
    */
   public async touch(expirationTime?: number) {
-    await this.validate()
+    await this.validate('Validation failed on touch')
     return this.getState().archivist.touch(this.getTopic(), this.getIndex(), expirationTime)
   }
 
@@ -500,7 +507,17 @@ export default class ValidatedTopic {
   /**
    * Validate the current instance
    */
-  public async validate(): Promise<void> {
-    return classValidator.validate(this).then((errors) => throwOnError('Invalid type', errors))
+  public async validate(errorMessage?: string): Promise<void> {
+    const errors = await classValidator.validate(this)
+    if (errors.length > 0) {
+      const state = <any> this.getState()
+
+      throw new ValidationError(errorMessage || 'Validation failed', 'server', {
+        actorId: state.actorId,
+        userCommand: state.description,
+        topic: this.getTopic(),
+        index: this.getIndex()
+      }, errors)
+    }
   }
 }

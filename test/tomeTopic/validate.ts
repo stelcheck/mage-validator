@@ -59,6 +59,17 @@ class TestTomeTopic extends ValidatedTomeTopic {
 
 describe('validate', function () {
   const state = new mage.core.State()
+  const errorMessage = 'Validation failed'
+
+  async function assertFailedValidation(tTest: TestTomeTopic) {
+    try {
+      await tTest.validate(errorMessage)
+    } catch (error) {
+      return assert.strictEqual(error.message, errorMessage)
+    }
+
+    throw new Error('Did not throw')
+  }
 
   it('top-level attribute validation - valid data', async () => {
     const tTest = await TestTomeTopic.create(state, { id: '1' })
@@ -71,13 +82,7 @@ describe('validate', function () {
     const tTest = await TestTomeTopic.create(state, { id: '1' })
     tTest.url = 'hi'
 
-    try {
-      await tTest.validate()
-    } catch (error) {
-      return assert.strictEqual(error.message, 'Invalid type')
-    }
-
-    throw new Error('Did not throw')
+    await assertFailedValidation(tTest)
   })
 
   it('child object attribute validation - valid data', async () => {
@@ -97,13 +102,7 @@ describe('validate', function () {
     child.childId = 'not a string number'
     tTest.child = child
 
-    try {
-      await tTest.validate()
-    } catch (error) {
-      return assert.strictEqual(error.message, 'Invalid type')
-    }
-
-    throw new Error('Did not throw')
+    await assertFailedValidation(tTest)
   })
 
   it('child array attribute validation - valid data', async () => {
@@ -118,13 +117,7 @@ describe('validate', function () {
     const tTest = await TestTomeTopic.create(state, { id: '1' })
     tTest.list = ['invalid']
 
-    try {
-      await tTest.validate()
-    } catch (error) {
-      return assert.strictEqual(error.message, 'Invalid type')
-    }
-
-    throw new Error('Did not throw')
+    await assertFailedValidation(tTest)
   })
 
   it('child array of object attribute validation - valid data', async () => {
@@ -150,13 +143,7 @@ describe('validate', function () {
 
     tTest.children.push(child)
 
-    try {
-      await tTest.validate()
-    } catch (error) {
-      return assert.strictEqual(error.message, 'Invalid type')
-    }
-
-    throw new Error('Did not throw')
+    await assertFailedValidation(tTest)
   })
 
   it('adding a typed value to a validated tome attribute and validating that attribute should work', async () => {

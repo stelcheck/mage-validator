@@ -27,9 +27,12 @@ function createTests(name: string, testCreateArgs: string[], assertions: (...arg
       try {
         await (<any> topic)[name](...testCreateArgs)
       } catch (error) {
-        const message = error.details[0].constraints.isUrl
-        assert.equal(message, 'url must be an URL address')
+        const message = error.validationErrors[0].constraints.isUrl
+
+        return assert.equal(message, 'url must be an URL address')
       }
+
+      throw new Error('Did not fail')
     })
 
     it('Valid call works correctly', async function () {

@@ -76,6 +76,7 @@ describe('NestedDataUserCommand', function () {
     try {
       await NestedDataUserCommand.execute(state, <NestedData> { count: 1 }, 5)
     } catch (error) {
+      console.log(error.message, error.details, error.stack)
       return
     }
 
@@ -92,6 +93,7 @@ describe('NestedDataUserCommand', function () {
     try {
       await NestedArrayUserCommand.execute(state, <NestedData[]> [{ count: 0 }], 1)
     } catch (error) {
+      console.log(error.details)
       return
     }
 
