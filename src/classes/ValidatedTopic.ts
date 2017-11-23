@@ -510,14 +510,17 @@ export default class ValidatedTopic {
   public async validate(errorMessage?: string, code?: string): Promise<void> {
     const errors = await classValidator.validate(this)
     if (errors.length > 0) {
-      this.raiseValidationError(errorMessage || 'Validation failed', errors, code)
+      this.raiseValidationError(errors, errorMessage, code)
     }
   }
 
-  public raiseValidationError(errorMessage: string, errors: any[], code?: string) {
+  /**
+   * Throw a ValidateError including relevant details
+   */
+  public raiseValidationError(errors: any[], errorMessage?: string, code?: string) {
     const state = <any> this.getState()
 
-    throw new ValidationError(errorMessage, code || 'server', {
+    throw new ValidationError(errorMessage || 'Validation failed', code || 'server', {
       actorId: state.actorId,
       userCommand: state.description,
       topic: this.getTopic(),
