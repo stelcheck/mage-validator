@@ -507,17 +507,21 @@ export default class ValidatedTopic {
   /**
    * Validate the current instance
    */
-  public async validate(errorMessage?: string): Promise<void> {
+  public async validate(errorMessage?: string, code?: string): Promise<void> {
     const errors = await classValidator.validate(this)
     if (errors.length > 0) {
-      const state = <any> this.getState()
-
-      throw new ValidationError(errorMessage || 'Validation failed', 'server', {
-        actorId: state.actorId,
-        userCommand: state.description,
-        topic: this.getTopic(),
-        index: this.getIndex()
-      }, errors)
+      this.raiseValidationError(errorMessage || 'Validation failed', errors, code)
     }
+  }
+
+  public raiseValidationError(errorMessage: string, errors: any[], code?: string) {
+    const state = <any> this.getState()
+
+    throw new ValidationError(errorMessage, code || 'server', {
+      actorId: state.actorId,
+      userCommand: state.description,
+      topic: this.getTopic(),
+      index: this.getIndex()
+    }, errors)
   }
 }
