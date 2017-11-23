@@ -3,7 +3,7 @@ import * as classTransformer from 'class-transformer'
 import * as classValidator from 'class-validator'
 
 import { ValidatedTopic } from './classes'
-import { crash, throwOnError } from './errors'
+import { crash, ValidationError } from './errors'
 
 const deepIterator = require('deep-iterator').default
 const functionArguments = require('function-arguments')
@@ -40,8 +40,18 @@ export function Acl(...acl: string[]) {
     UserCommand.acl = acl
     UserCommand.params = parameterNames
 
-    async function validateObject(message: string, obj: any) {
-      return classValidator.validate(obj).then((errors) => throwOnError(message, errors, obj))
+    async function validateObject(message: string, code: string, state: any, parsedData: any, receivedData?: any) {
+      const errors = await classValidator.validate(parsedData)
+      if (errors.length > 0) {
+        throw new ValidationError(message, code, {
+          actorId: state.actorId,
+          userCommand: state.description,
+          receivedData,
+          parsedData
+        }, errors)
+      }
+
+      return parsedData
     }
 
     return {
@@ -67,7 +77,7 @@ export function Acl(...acl: string[]) {
         }
 
         // Validate all parameters at once
-        await validateObject('Invalid user command input', userCommand)
+        await validateObject('Invalid user command input', 'invalidInput', state, userCommand, userCommandData)
 
         // Map casted parameters into an array of arguments
         const castedArgs = args.map((_arg, pos) => {
@@ -85,12 +95,12 @@ export function Acl(...acl: string[]) {
         }
 
         if (!Array.isArray(output)) {
-          return validateObject('Invalid user command return value', output)
+          return validateObject('Invalid user command return value', 'server', state, output)
         }
 
         // In the case of arrays, validate each entries
         for (const [pos, val] of output.entries()) {
-          await validateObject(`Invalid user command return value in array (index: ${pos})`, val)
+          await validateObject(`Invalid user command return value in array (index: ${pos})`, 'server', state, val)
         }
 
         return output

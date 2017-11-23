@@ -32,7 +32,7 @@ describe('create', function () {
     try {
       await TestTopic.create(state, <{}> true)
     } catch (error) {
-      assert.equal(error.message, 'Invalid index')
+      assert.equal(error.message, 'Index validation failed')
       return
     }
 

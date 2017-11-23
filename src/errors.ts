@@ -1,5 +1,4 @@
 import * as mage from 'mage'
-import * as classValidatorError from 'class-validator/validation/ValidationError'
 
 /**
  * Validation error classes
@@ -7,11 +6,20 @@ import * as classValidatorError from 'class-validator/validation/ValidationError
  * Will contain all the validation errors that were found upon validation.
  */
 export class ValidationError extends Error {
+  // Error code to be returned to the client
+  public code: string
+
+  // Details about the topic instance
   public details: any[]
 
-  constructor(message: string, details: any) {
+  // List of validation errors
+  public validationErrors: any[]
+
+  constructor(message: string, code: string, details: any, errors: any) {
     super(message)
+    this.code = code
     this.details = details
+    this.validationErrors = errors
     this.name = 'ValidationError'
   }
 }
@@ -22,15 +30,4 @@ export class ValidationError extends Error {
 export function crash(message: string, data: any) {
   mage.logger.emergency.data(data).log(message)
   return new Error(message)
-}
-
-/**
- * Throw on validation if at least one error is found
- */
-export function throwOnError(message: string, errors: classValidatorError.ValidationError[], obj?: any) {
-  if (errors.length > 0) {
-    throw new ValidationError(message, errors)
-  }
-
-  return obj
 }
