@@ -57,4 +57,5 @@ describe('Validated Topics', function () {
   require('./query')
   require('./add-set-touch')
   require('./del')
+  require('./type-decorator')
 })

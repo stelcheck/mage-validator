@@ -30,6 +30,10 @@ You will also need to make sure that the following configuration is set in your
 Usage
 -----
 
+**Note:** mage-validator exports all functions exposed by class-validator and
+class-transformer for convenience; the only exception is the `@Type` decorator, 
+which is customized to accept either a type of a function (instead of only a function).
+
 ### (Optional) Project structure
 
 In normal MAGE projects, you need to put all your topics configuration under
@@ -79,7 +83,7 @@ Validation works by encapsulating messages into types:
 > `./lib/modules/modulename/types/PlayerData.ts`
 
 ```typescript
-import { IsInt, Max } from 'class-validator';
+import { IsInt, Max } from 'mage-validator';
 
 export default class {
     @IsInt()
@@ -94,9 +98,7 @@ Which then can be used as user commands types:
 
 ```typescript
 import * as mage from 'mage'
-import { Acl } from 'mage-validator'
-import { IsInt, Max, ValidateNested } from 'class-validator'
-import { Type } from 'class-transformer'
+import { Type, IsInt, Max, ValidateNested, Acl } from 'mage-validator'
 import PlayerData from '../types/PlayerData'
 
 export default class {
@@ -129,8 +131,7 @@ configuration as static parameters:
 > `./lib/modules/modulename/topics/Player.ts`
 
 ```typescript
-import { ValidatedTopic } from 'mage-validator'
-import { ValidateNested, IsUUID, IsAlpha } from 'class-validator';
+import { ValidatedTopic, ValidateNested, IsUUID, IsAlpha } from 'mage-validator';
 import { Type } from 'class-transform';
 import PlayerData from '../topics/PlayerData'
 
@@ -218,10 +219,8 @@ to record any operations:
 
 ```typescript
 import * as mage from 'mage'
-import { Acl } from 'mage-validator'
-import { ValidateNested } from 'class-validator'
+import { ValidateNested, Type, Acl } from 'mage-validator'
 import Player from '../topics/Player'
-import { Type } from 'class-transformer'
 
 export default class {
     @ValidateNested()
