@@ -13,6 +13,23 @@ const functionArguments = require('function-arguments')
  */
 type IExecuteFunction = <T>(state: mage.core.IState, ...args: any[]) => Promise<T>
 
+// Expose everything from class-validator and class-transformer
+export * from 'class-transformer'
+export * from 'class-validator'
+
+/**
+ * Wrap @Type from class-transformer
+ *
+ * @param type The type to configure
+ */
+export function Type(type: any) {
+  if (type.prototype) {
+    return classTransformer.Type(/* istanbul ignore next */ () => type)
+  }
+
+  return classTransformer.Type(type)
+}
+
 
 /**
  * @Acl decorator
