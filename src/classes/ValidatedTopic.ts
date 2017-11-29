@@ -9,6 +9,23 @@ import { ValidationError } from '../errors'
 const isObject = require('isobject')
 
 /**
+ * Wrap a promise around state.distribute
+ *
+ * @param state MAGE state
+ */
+async function promisifyStateDistribute(state: mage.core.IState) {
+  return new Promise((resolve, reject) => {
+    state.distribute((error?: Error) => {
+      if (error) {
+        return reject(error)
+      }
+
+      resolve()
+    })
+  })
+}
+
+/**
  * The IStaticThis interface is required
  * for us to be able to create static factory functions
  * that return a properly typed output.
@@ -505,6 +522,68 @@ export default class ValidatedTopic {
   }
 
   /**
+   * Check if the current topic is locked.
+   */
+  public async isLocked(state: mage.core.IState = new mage.core.State()) {
+    return new Promise((resolve, reject) => {
+      state.archivist.get(this.getTopic(), this.getLockIndex(), {
+        optional: true
+      }, (error, isLocked) => {
+        if (error) {
+          return reject(error)
+        }
+
+        resolve(!!isLocked)
+      })
+    })
+  }
+
+  /**
+   * Lock this topic instance
+   *
+   * By default, locked topics will be unlocked
+   * once `state.distribute` is called on the state associated
+   * with this topic. If you do not want this behaviour,
+   * set `autoUnlock` to true, and make sure
+   * to call `unlock` manually when you are done.
+   *
+   * @param autoUnlock Unlock this topic once we complete the transaction
+   */
+  public async lock(autoUnlock: boolean = true) {
+    const state = new mage.core.State()
+    const isLocked = await this.isLocked(state)
+
+    if (isLocked) {
+      throw new Error('Topic is locked')
+    }
+
+    const lockIndex = this.getLockIndex()
+
+    // Auto-unlock
+    if (autoUnlock) {
+      this.getState().archivist.del(this.getTopic(), lockIndex)
+    }
+
+    state.archivist.set(this.getTopic(), lockIndex, 'locked')
+
+    return promisifyStateDistribute(state)
+  }
+
+  /**
+   * Unlock this topic instance
+   *
+   * You will only need to call this manually when
+   * you have previously called `lock` with `autoUnlock`
+   * set to false.
+   */
+  public async unlock() {
+    const state = new mage.core.State()
+    state.archivist.del(this.getTopic(), this.getLockIndex())
+
+    return promisifyStateDistribute(state)
+  }
+
+  /**
    * Validate the current instance
    */
   public async validate(errorMessage?: string, code?: string): Promise<void> {
@@ -526,5 +605,14 @@ export default class ValidatedTopic {
       topic: this.getTopic(),
       index: this.getIndex()
     }, errors)
+  }
+
+  /**
+   * Generate a lock index for this current topic
+   */
+  private getLockIndex() {
+    return Object.assign(this.getIndex(), {
+      mageValidatorLock: 'locked'
+    })
   }
 }

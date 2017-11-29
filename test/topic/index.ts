@@ -58,4 +58,5 @@ describe('Validated Topics', function () {
   require('./add-set-touch')
   require('./del')
   require('./type-decorator')
+  require('./lock-unlock')
 })
