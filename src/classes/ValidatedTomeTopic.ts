@@ -80,7 +80,17 @@ function processArrayTomeMethodRequest(target: any, key: string, ctor: any) {
         return iterator(...iteratorArgs)
       }
 
-      return target[key](...args)
+      const ret = target[key](...args)
+
+      if (key === 'find') {
+        return ret ? proxifyOrUntome(ret, ctor) : ret
+      }
+
+      if (key === 'filter') {
+        return ret.map((t: any) => proxifyOrUntome(t, ctor))
+      }
+
+      return ret
     }
   }
 

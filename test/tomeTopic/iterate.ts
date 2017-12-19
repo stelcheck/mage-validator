@@ -294,5 +294,44 @@ describe('iterate', function () {
       assert.deepStrictEqual(entry, ['1'])
       assert.strictEqual(tTest.list[0], '2')
     })
+
+    it('find returns a proxied tomes', async () => {
+      const tTest = await TestTomeTopic.create(state, { id: 'hello' })
+      tTest.children = [{
+        childId: '1'
+      }]
+
+      const child = tTest.children.find((child) => child.childId === '1')
+
+      assert.strictEqual(child instanceof ObjectTome, false)
+      assert.strictEqual(child instanceof Object, true)
+      assert.strictEqual(child!.childId, '1')
+    })
+
+    it('find returns undefined if nothing is found', async () => {
+      const tTest = await TestTomeTopic.create(state, { id: 'hello' })
+      tTest.children = [{
+        childId: '1'
+      }]
+
+      const child = tTest.children.find((child) => child.childId === '2')
+
+      assert.strictEqual(child instanceof ObjectTome, false)
+      assert.strictEqual(child instanceof Object, false)
+      assert.strictEqual(child, undefined)
+    })
+
+    it('filter returns a proxied tomes', async () => {
+      const tTest = await TestTomeTopic.create(state, { id: 'hello' })
+      tTest.children = [{
+        childId: '1'
+      }]
+
+      const children = tTest.children.filter((child) => child.childId === '1')
+
+      assert.strictEqual(children[0] instanceof ObjectTome, false)
+      assert.strictEqual(children[0] instanceof Object, true)
+      assert.strictEqual(children[0]!.childId, '1')
+    })
   })
 })
