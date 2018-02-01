@@ -78,6 +78,18 @@ describe('mutate', function () {
     assert.strictEqual(tTest.name, 'hi')
   })
 
+  it('can be set to null', async () => {
+    const tTest = await TestTomeTopic.create(state, { id: '1' })
+    tTest.name = <any> null
+    assert.strictEqual(tTest.name, null)
+  })
+
+  it('can be set to undefined', async () => {
+    const tTest = await TestTomeTopic.create(state, { id: '1' })
+    tTest.name = <any> undefined
+    assert.strictEqual(tTest.name, undefined)
+  })
+
   it('can be mutated when created with normal data', async () => {
     const tTest = await TestTomeTopic.create(state, { id: '1' }, {
       name: 'ho'

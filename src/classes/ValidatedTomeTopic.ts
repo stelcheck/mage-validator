@@ -300,7 +300,12 @@ export default class ValidatedTomeTopic extends ValidatedTopic {
       },
       set(_target: any, key, value) {
         tome.set(key, value)
-        typeMap[key] = value.constructor
+
+        typeMap[key] = undefined
+
+        if (value !== undefined && value !== null) {
+          typeMap[key] = value.constructor
+        }
 
         return true
       },
