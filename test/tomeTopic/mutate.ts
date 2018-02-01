@@ -156,6 +156,20 @@ describe('mutate', function () {
     assert.strictEqual(tTest.child.children[0].childId, '20')
   })
 
+  it('nestedt data - can be set to null', async () => {
+    const tTest = await TestTomeTopic.create(state, { id: '1' })
+    tTest.child = <any> {}
+    tTest.child.childId = <any> null
+    assert.strictEqual(tTest.child.childId, null)
+  })
+
+  it('nestedt data - can be set to undefined', async () => {
+    const tTest = await TestTomeTopic.create(state, { id: '1' })
+    tTest.child = <any> {}
+    tTest.child.childId = <any> undefined
+    assert.strictEqual(tTest.child.childId, undefined)
+  })
+
   it('increments works at the top level', async () => {
     const tTest = await TestTomeTopic.create(state, { id: '1' })
     tTest.num = 1

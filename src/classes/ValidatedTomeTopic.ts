@@ -211,7 +211,12 @@ function createTomeProxy(tome: any, ctor: any): any {
       },
       set(target: any, key: string, value) {
         target.set(key, value)
-        typeMap[key] = value.constructor
+
+        typeMap[key] = undefined
+
+        if (value !== undefined && value !== null) {
+          typeMap[key] = value.constructor
+        }
 
         return true
       },
