@@ -18,18 +18,87 @@ export * from 'class-transformer'
 export * from 'class-validator'
 
 /**
+ * wrap the class' static create method
+ *
+ * @param target
+ * @param key
+ * @param childrenType
+ * @param type
+ */
+function wrapCreate(target: any, key: string, childrenType: any, mapType?: any) {
+  const { create } = target
+
+  target.create = async (
+    state: mage.core.IState,
+    index: mage.archivist.IArchivistIndex,
+    data?: any
+  ) => {
+    const instance = await create.call(target, state, index, data)
+    const map = mapType ? new mapType() : {}
+
+    if (!instance[key]) {
+      return instance
+    }
+
+    for (const [subkey, value] of Object.entries(instance[key])) {
+      map[subkey] = Object.assign(new childrenType(), value)
+    }
+
+    instance[key] = map
+
+    return instance
+  }
+
+  const { validate } = target.prototype
+
+  target.prototype.validate = async function (errorMessage?: string, code?: string) {
+    await validate.call(this, errorMessage, code)
+    let errors: any[] = []
+
+    if (!this[key]) {
+      return
+    }
+
+    for (const [_, value] of Object.entries(this[key])) {
+      errors = errors.concat(await classValidator.validate(value))
+    }
+
+    if (errors.length > 0) {
+      this.raiseValidationError(errors, errorMessage, code)
+    }
+  }
+}
+
+/**
+ *
+ * @param type
+ */
+export function MapOf(type: any) {
+  return (target: any, key?: string) => {
+    if (!key) {
+      target.isMapOf = type
+    } else {
+      wrapCreate(target.constructor, key, type)
+    }
+  }
+}
+
+/**
  * Wrap @Type from class-transformer
  *
  * @param type The type to configure
  */
 export function Type(type: any) {
+  if (type.isMapOf) {
+    return (target: any, key: string) => wrapCreate(target.constructor, key, type.isMapOf, type)
+  }
+
   if (type.prototype) {
     return classTransformer.Type(/* istanbul ignore next */ () => type)
   }
 
   return classTransformer.Type(type)
 }
-
 
 /**
  * @Acl decorator

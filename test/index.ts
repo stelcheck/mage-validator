@@ -52,5 +52,6 @@ describe('mage-validator', function () {
   require('./tomeTopic')
   require('./usercommand')
   require('./loaders')
+  require('./decorators')
 })
 

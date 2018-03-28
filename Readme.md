@@ -30,9 +30,47 @@ You will also need to make sure that the following configuration is set in your
 Usage
 -----
 
-**Note:** mage-validator exports all functions exposed by class-validator and
-class-transformer for convenience; the only exception is the `@Type` decorator, 
-which is customized to accept either a type of a function (instead of only a function).
+mage-validator exports all functions exposed by class-validator and
+class-transformer for convenience. A few changes and additions have
+however been made for convenience.
+
+### @Type decorator
+```typescript
+
+```
+
+The `@Type` decorator has been customized to accept either a type 
+or a function (instead of only a function).
+
+```typescript
+// Both are equivalent
+@Type(Hello)
+@Type(() => Hello)
+```
+
+### @MapOf decorator
+
+```typescript
+class Child { @IsPositive() public id: number }
+
+@MapOf(Child)
+class DynamicMap { [key: string]: Child }
+
+class TestTopic extends ValidatedTopic {
+  // [...]
+
+  // Use a Map class
+  @Type(DynamicMap) public map: DynamicMap
+
+  // Use an anonymous object as a map
+  @MapOf(Child) public anonymousMap: { [key: string]: Child }
+}
+```
+
+`mage-validator` also provides an additional `@MapOf` decorator for dealing with
+key-value map objects; using this type will both ensure nested maps entries
+will be typed and that each entries will be validated (so `@ValidateNested` 
+is not required).
 
 ### (Optional) Project structure
 

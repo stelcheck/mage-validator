@@ -1,0 +1,3 @@
+describe('decorators', () => {
+  require('./MapOf')
+})
