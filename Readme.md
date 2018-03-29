@@ -51,6 +51,10 @@ or a function (instead of only a function).
 ### @MapOf decorator
 
 ```typescript
+function validateFunc(key: string, value: Child) {
+  throw new Error('never valid')
+}
+
 class Child { @IsPositive() public id: number }
 
 @MapOf(Child)
@@ -64,6 +68,8 @@ class TestTopic extends ValidatedTopic {
 
   // Use an anonymous object as a map
   @MapOf(Child) public anonymousMap: { [key: string]: Child }
+
+  @MapOf(Child, validateFunc) public anotherMap: { [key: string]: Child }
 }
 ```
 

@@ -236,10 +236,10 @@ export default class ValidatedTomeTopic extends ValidatedTopic {
 
   public tome: any
 
-  public static async create<T extends ValidatedTopic>(
-    this: IStaticThis<T>,
+  public static async create<I extends archivist.IArchivistIndex, T extends ValidatedTopic>(
+    this: IStaticThis<I, T>,
     state: mage.core.IState,
-    index: archivist.IArchivistIndex,
+    index: I,
     data?: any): Promise<T> {
 
     const tome: any = Tome.isTome(data) ? data : Tome.conjure(data || {})

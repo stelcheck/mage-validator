@@ -1,46 +1,56 @@
 import * as classTransformer from 'class-transformer'
 import * as classValidator from 'class-validator'
+import isObject = require('isobject')
 
 import { archivist } from 'mage'
 import * as mage from 'mage'
 
 import { ValidationError } from '../errors'
 
-const isObject = require('isobject')
+/**
+ * Anonymous object representation of a validated topic
+ *
+ * Generally passed to Topic.create()
+ */
+export type TopicData<T extends ValidatedTopic> = {
+  [P in keyof T]?: T[P]
+}
 
 /**
  * The IStaticThis interface is required
  * for us to be able to create static factory functions
  * that return a properly typed output.
  */
-export interface IStaticThis<T> {
+export interface IStaticThis<I, T> {
+  indexType: { new(): I },
+
   new (): T,
 
   getClassName(): string,
 
   execute<T, R>(
-    this: IStaticThis<T>,
+    this: IStaticThis<I, T>,
     state: any,
     method: any,
     args: any[],
     run: (data: any) => any): Promise<R>,
 
   create<T extends ValidatedTopic>(
-    this: IStaticThis<T>,
+    this: IStaticThis<I, T>,
     state: mage.core.IState,
-    index: archivist.IArchivistIndex,
+    index: I,
     data?: any): Promise<T>,
 
   get<T extends ValidatedTopic>(
-    this: IStaticThis<T>,
+    this: IStaticThis<I, T>,
     state: mage.core.IState,
-    indexes: archivist.IArchivistIndex,
+    index: I,
     options?: archivist.IArchivistGetOptions): Promise<T>
 
   mget<T extends ValidatedTopic>(
-    this: IStaticThis<T>,
+    this: IStaticThis<I, T>,
     state: mage.core.IState,
-    indexes: archivist.IArchivistIndex[],
+    indexes: I[],
     options?: archivist.IArchivistGetOptions): Promise<T[]>
 }
 
@@ -116,11 +126,11 @@ export default class ValidatedTopic {
    *
    * @memberof ValidatedTopic
    */
-  public static async create<T extends ValidatedTopic>(
-    this: IStaticThis<T>,
+  public static async create<I extends archivist.IArchivistIndex, T extends ValidatedTopic>(
+    this: IStaticThis<I, T>,
     state: mage.core.IState,
-    index: archivist.IArchivistIndex,
-    data?: any): Promise<T> {
+    index: I,
+    data?: TopicData<T>): Promise<T> {
 
     let instance
 
@@ -153,8 +163,8 @@ export default class ValidatedTopic {
    *
    * @memberof ValidatedTopic
    */
-  public static async execute<T, R>(
-    this: IStaticThis<T>,
+  public static async execute<I, T, R>(
+    this: IStaticThis<I, T>,
     state: any,
     method: any,
     args: any[],
@@ -187,10 +197,10 @@ export default class ValidatedTopic {
    *
    * @memberof ValidatedTopic
    */
-  public static async get<T extends ValidatedTopic>(
-    this: IStaticThis<T>,
+  public static async get<I extends archivist.IArchivistIndex, T extends ValidatedTopic>(
+    this: IStaticThis<I, T>,
     state: mage.core.IState,
-    index: archivist.IArchivistIndex,
+    index: I,
     options?: archivist.IArchivistGetOptions): Promise<T> {
 
     const topicName = this.getClassName()
@@ -224,10 +234,10 @@ export default class ValidatedTopic {
    *
    * @memberof ValidatedTopic
    */
-  public static async tryGet<T extends ValidatedTopic>(
-    this: IStaticThis<T>,
+  public static async tryGet<I extends archivist.IArchivistIndex, T extends ValidatedTopic>(
+    this: IStaticThis<I, T>,
     state: mage.core.IState,
-    index: archivist.IArchivistIndex,
+    index: I,
     options?: archivist.IArchivistGetOptions): Promise<T | undefined> {
 
     if (!options) {
@@ -252,10 +262,10 @@ export default class ValidatedTopic {
    *
    * @memberof ValidatedTopic
    */
-  public static async mget<T extends ValidatedTopic>(
-    this: IStaticThis<T>,
+  public static async mget<I extends archivist.IArchivistIndex, T extends ValidatedTopic>(
+    this: IStaticThis<I, T>,
     state: mage.core.IState,
-    indexes: archivist.IArchivistIndex[],
+    indexes: I[],
     options?: archivist.IArchivistGetOptions): Promise<T[]> {
 
     const topic = this.getClassName()
@@ -270,7 +280,7 @@ export default class ValidatedTopic {
       for (let d = 0; d < list.length; d += 1) {
         const data = list[d]
         const index = queries[d].index
-        const instance = await this.create(state, index, data)
+        const instance = await this.create(state, index as I, data)
 
         instances.push(instance)
       }
@@ -313,8 +323,8 @@ export default class ValidatedTopic {
    *
    * @memberof ValidatedTopic
    */
-  public static async list<T extends ValidatedTopic>(
-    this: IStaticThis<T>,
+  public static async list<I extends archivist.IArchivistIndex, T extends ValidatedTopic>(
+    this: IStaticThis<I, T>,
     state: mage.core.IState, partialIndex:
     archivist.IArchivistIndex,
     options?: archivist.IArchivistListOptions): Promise<archivist.IArchivistIndex[]> {
@@ -342,10 +352,10 @@ export default class ValidatedTopic {
    *
    * @memberof ValidatedTopic
    */
-  public static async query<T extends ValidatedTopic>(
-    this: IStaticThis<T>,
+  public static async query<I extends archivist.IArchivistIndex, T extends ValidatedTopic>(
+    this: IStaticThis<I, T>,
     state: mage.core.IState,
-    partialIndex: archivist.IArchivistIndex,
+    partialIndex: Partial<I>,
     options?: archivist.IArchivistGetOptions): Promise<T[]> {
 
     const topicName = this.getClassName()
@@ -353,7 +363,7 @@ export default class ValidatedTopic {
     return this.execute<T, T[]>(state, 'list', [
       topicName,
       partialIndex
-    ], async (indexes: archivist.IArchivistIndex[]) => {
+    ], async (indexes: I[]) => {
       return this.mget<T>(state, indexes, options)
     })
   }

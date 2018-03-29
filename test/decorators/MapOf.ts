@@ -38,8 +38,11 @@ class TestTopic extends ValidatedTopic {
   @ValidateNested()
   public map: DynamicMap
 
-  @MapOf(Child)
-  @ValidateNested()
+  @MapOf(Child, (key: string) => {
+    if (key === 'badkey') {
+      throw new Error('bad key')
+    }
+  })
   public anonymousMap: { [key: string]: Child }
 }
 
@@ -109,6 +112,23 @@ describe('MapOf', () => {
 
     await instance.validate()
     instance.anonymousMap.child.id = -11
+
+    try {
+      await instance.validate()
+    } catch (error) {
+      console.warn(error)
+      return assert.equal(error.validationErrors.length, 1)
+    }
+
+    throw new Error('Validation did not fail')
+  })
+
+  it('a validation function can be used with @MapOf', async () => {
+    const instance = await TestTopic.create(state, { id: 'test' }, {
+      anonymousMap: {
+        badkey: { id: 1 }
+      }
+    })
 
     try {
       await instance.validate()

@@ -13,6 +13,11 @@ const functionArguments = require('function-arguments')
  */
 type IExecuteFunction = <T>(state: mage.core.IState, ...args: any[]) => Promise<T>
 
+/**
+ * Validate function type (currently used for MapOf)
+ */
+export type ValidateFunction = (key: string, value: any) => void
+
 // Expose everything from class-validator and class-transformer
 export * from 'class-transformer'
 export * from 'class-validator'
@@ -25,7 +30,7 @@ export * from 'class-validator'
  * @param childrenType
  * @param type
  */
-function wrapCreate(target: any, key: string, childrenType: any, mapType?: any) {
+function wrapCreate(target: any, key: string, childrenType: any, validateFunction?: ValidateFunction, mapType?: any) {
   const { create } = target
 
   target.create = async (
@@ -59,8 +64,28 @@ function wrapCreate(target: any, key: string, childrenType: any, mapType?: any) 
       return
     }
 
-    for (const [_, value] of Object.entries(this[key])) {
+    for (const [subkey, value] of Object.entries(this[key])) {
       errors = errors.concat(await classValidator.validate(value))
+
+      if (!validateFunction) {
+        continue
+      }
+
+      try {
+        validateFunction(subkey, value)
+      } catch (error) {
+        error.message = `Validation error on ${key}.${subkey}: ${error.message}`
+
+        const validationError = new classValidator.ValidationError()
+        validationError.target = target
+        validationError.property = key
+        validationError.value = value
+        validationError.constraints = {
+          mapOf: error.message
+        }
+
+        errors.push(Object.assign(validationError, error))
+      }
     }
 
     if (errors.length > 0) {
@@ -73,12 +98,12 @@ function wrapCreate(target: any, key: string, childrenType: any, mapType?: any) 
  *
  * @param type
  */
-export function MapOf(type: any) {
+export function MapOf(type: any, validateFunction?: ValidateFunction) {
   return (target: any, key?: string) => {
     if (!key) {
-      target.isMapOf = type
+      target.isMapOf = { type, validateFunction }
     } else {
-      wrapCreate(target.constructor, key, type)
+      wrapCreate(target.constructor, key, type, validateFunction)
     }
   }
 }
@@ -90,7 +115,8 @@ export function MapOf(type: any) {
  */
 export function Type(type: any) {
   if (type.isMapOf) {
-    return (target: any, key: string) => wrapCreate(target.constructor, key, type.isMapOf, type)
+    const { type: childrenType, validateFunction } = type.isMapOf
+    return (target: any, key: string) => wrapCreate(target.constructor, key, childrenType, validateFunction, type)
   }
 
   if (type.prototype) {
