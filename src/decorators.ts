@@ -144,6 +144,14 @@ export function Acl(...acl: string[]) {
     const parameterNames = functionArguments(execute)
     const types = Reflect.getMetadata('design:paramtypes', UserCommand, key)
 
+    if (!types) {
+        throw crash('Reflect.getMetadata returned null.\
+        Did you set experimentalDecorators and emitDecoratorMetadata to true in your tsconfig.json ?', {
+            method: key,
+            userCommand: UserCommand
+        })
+    }
+
     // We extract the state information, since we won't need it
     parameterNames.shift()
     types.shift()
