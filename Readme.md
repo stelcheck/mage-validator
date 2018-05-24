@@ -35,18 +35,15 @@ class-transformer for convenience. A few changes and additions have
 however been made for convenience.
 
 ### @Type decorator
-```typescript
-
-```
-
-The `@Type` decorator has been customized to accept either a type 
-or a function (instead of only a function).
 
 ```typescript
 // Both are equivalent
 @Type(Hello)
 @Type(() => Hello)
 ```
+
+The `@Type` decorator has been customized to accept either a type 
+or a function (instead of only a function).
 
 ### @MapOf decorator
 
