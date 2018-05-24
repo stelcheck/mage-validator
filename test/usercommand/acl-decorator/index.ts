@@ -4,4 +4,5 @@ describe('@acl decorator', function () {
   require('./ScalarInputUserCommand')
   require('./NestedDataUserCommand')
   require('./NestedTopicUserCommand')
+  require('./MisconfiguredTsconfig')
 })
