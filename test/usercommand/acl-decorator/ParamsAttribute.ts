@@ -3,11 +3,7 @@ import * as mage from 'mage'
 import * as assert from 'assert'
 import { Acl } from '../../../src'
 
-let state: mage.core.IState
-
 describe('Params attribute injection', function () {
-  beforeEach(() => state = new mage.core.State())
-
   it('Params is injected, and contains the signature', async function () {
     /**
      * We will validate that this user command class gets augmented
@@ -24,6 +20,6 @@ describe('Params attribute injection', function () {
       }
     }
 
-    assert.deepEqual((<any> UserCommand).params, ['_hello'])
+    assert.deepStrictEqual((<any> UserCommand).params, ['_hello'])
   })
 })

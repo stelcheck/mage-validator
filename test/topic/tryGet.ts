@@ -11,7 +11,7 @@ describe('tryGet', function () {
 
   it('Sets the optional option to true', async function () {
     mockStateArchivistMethod(state, 'get', null, function (_topicName: string, _index: any, opts: any) {
-      assert.equal(opts.optional, true)
+      assert.strictEqual(opts.optional, true)
     })
 
     return await TestTopic.tryGet(state, { id: '1' })
@@ -23,7 +23,7 @@ describe('tryGet', function () {
     }
 
     mockStateArchivistMethod(state, 'get', null, function (_topicName: string, _index: any, opts: any) {
-      assert.equal(opts.optional, true)
+      assert.strictEqual(opts.optional, true)
     })
 
     return await TestTopic.tryGet(state, { id: '1' }, options)

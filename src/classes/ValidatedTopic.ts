@@ -12,8 +12,13 @@ import { ValidationError } from '../errors'
  *
  * Generally passed to Topic.create()
  */
-export type TopicData<T extends ValidatedTopic> = {
-  [P in keyof T]?: T[P]
+export type TopicData<T extends ValidatedTopic> = Partial<T>
+
+/**
+ * Partial index type
+ */
+export type PartialIndex<I> = {
+  [K in keyof I]?: string
 }
 
 /**
@@ -22,13 +27,14 @@ export type TopicData<T extends ValidatedTopic> = {
  * that return a properly typed output.
  */
 export interface IStaticThis<I, T> {
-  indexType: { new(): I },
+  // Todo: any should be I!
+  indexType: { new(): any },
 
   new (): T,
 
   getClassName(): string,
 
-  execute<T, R>(
+  execute<I, T, R>(
     this: IStaticThis<I, T>,
     state: any,
     method: any,
@@ -205,7 +211,7 @@ export default class ValidatedTopic {
 
     const topicName = this.getClassName()
 
-    return this.execute<T, T>(state, 'get', [
+    return this.execute<I, T, T>(state, 'get', [
       topicName,
       index,
       options
@@ -271,7 +277,7 @@ export default class ValidatedTopic {
     const topic = this.getClassName()
     const queries: archivist.IArchivistQuery[] = indexes.map((index) => ({ topic, index }))
 
-    return this.execute<T, T[]>(state, 'mget', [
+    return this.execute<I, T, T[]>(state, 'mget', [
       queries,
       options
     ], async (list: any) => {
@@ -325,13 +331,13 @@ export default class ValidatedTopic {
    */
   public static async list<I extends archivist.IArchivistIndex, T extends ValidatedTopic>(
     this: IStaticThis<I, T>,
-    state: mage.core.IState, partialIndex:
-    archivist.IArchivistIndex,
+    state: mage.core.IState,
+    partialIndex: PartialIndex<I>,
     options?: archivist.IArchivistListOptions): Promise<archivist.IArchivistIndex[]> {
 
     const topicName = this.getClassName()
 
-    return this.execute<T, archivist.IArchivistIndex[]>(state, 'list', [
+    return this.execute<I, T, I[]>(state, 'list', [
       topicName,
       partialIndex,
       options,
@@ -355,12 +361,12 @@ export default class ValidatedTopic {
   public static async query<I extends archivist.IArchivistIndex, T extends ValidatedTopic>(
     this: IStaticThis<I, T>,
     state: mage.core.IState,
-    partialIndex: Partial<I>,
+    partialIndex: PartialIndex<I>,
     options?: archivist.IArchivistGetOptions): Promise<T[]> {
 
     const topicName = this.getClassName()
 
-    return this.execute<T, T[]>(state, 'list', [
+    return this.execute<I, T, T[]>(state, 'list', [
       topicName,
       partialIndex
     ], async (indexes: I[]) => {

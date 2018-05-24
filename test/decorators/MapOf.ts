@@ -49,7 +49,9 @@ class TestTopic extends ValidatedTopic {
 describe('MapOf', () => {
   let state: mage.core.IState
 
-  beforeEach(() => state = new mage.core.State())
+  beforeEach(() => {
+    state = new mage.core.State()
+  })
 
   it('casts data on load', async () => {
     const instance = await TestTopic.create(state, { id: 'test' }, {
@@ -63,8 +65,8 @@ describe('MapOf', () => {
     const { map } = instance
     const { child } = map
 
-    assert.equal(map.constructor.name, 'DynamicMap')
-    assert.equal(child.constructor.name, 'Child')
+    assert.strictEqual(map.constructor.name, 'DynamicMap')
+    assert.strictEqual(child.constructor.name, 'Child')
   })
 
   it('map object can be anonymous', async () => {
@@ -79,8 +81,8 @@ describe('MapOf', () => {
     const { anonymousMap: map } = instance
     const { child } = map
 
-    assert.equal(map.constructor.name, 'Object')
-    assert.equal(child.constructor.name, 'Child')
+    assert.strictEqual(map.constructor.name, 'Object')
+    assert.strictEqual(child.constructor.name, 'Child')
   })
 
   it('validates data correctly', async () => {
@@ -97,7 +99,7 @@ describe('MapOf', () => {
       await instance.validate()
     } catch (error) {
       console.warn(error)
-      return assert.equal(error.validationErrors.length, 1)
+      return assert.strictEqual(error.validationErrors.length, 1)
     }
 
     throw new Error('Validation did not fail')
@@ -117,7 +119,7 @@ describe('MapOf', () => {
       await instance.validate()
     } catch (error) {
       console.warn(error)
-      return assert.equal(error.validationErrors.length, 1)
+      return assert.strictEqual(error.validationErrors.length, 1)
     }
 
     throw new Error('Validation did not fail')
@@ -134,7 +136,7 @@ describe('MapOf', () => {
       await instance.validate()
     } catch (error) {
       console.warn(error)
-      return assert.equal(error.validationErrors.length, 1)
+      return assert.strictEqual(error.validationErrors.length, 1)
     }
 
     throw new Error('Validation did not fail')

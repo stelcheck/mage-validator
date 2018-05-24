@@ -19,13 +19,13 @@ describe('execute', function () {
     }
 
     try {
-      await TestTopic.execute(state, 'fakeCall', [], function () {
+      await TestTopic.execute(state, 'fakeCall', [], () => {
         throw new Error('execute call did not fail')
       })
     } catch (error) {
       console.log(error.message)
       assert(error instanceof Error)
-      assert.equal(error.message, 'failed')
+      assert.strictEqual(error.message, 'failed')
     }
   })
 })

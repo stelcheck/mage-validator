@@ -16,15 +16,15 @@ describe('get', function () {
     }
 
     mockStateArchivistMethod(state, 'get', data, function (topicName: string, index: any, opts: any) {
-      assert.equal(topicName, 'TestTopic')
-      assert.equal(index.id, 1)
-      assert.equal(opts, null)
+      assert.strictEqual(topicName, 'TestTopic')
+      assert.strictEqual(index.id, '1')
+      assert.strictEqual(opts, undefined)
     })
 
     const topic: TestTopic = await TestTopic.get(state, { id: '1' })
     assert(topic instanceof TestTopic)
-    assert.equal(topic.name, data.name)
-    assert.equal(topic.url, data.url)
+    assert.strictEqual(topic.name, data.name)
+    assert.strictEqual(topic.url, data.url)
   })
 
   it('Options are passed to state.archivist.get', async function () {
@@ -33,9 +33,9 @@ describe('get', function () {
     }
 
     mockStateArchivistMethod(state, 'get', null, function (topicName: string, index: any, opts: any) {
-      assert.equal(topicName, 'TestTopic')
-      assert.equal(index.id, 1)
-      assert.equal(opts.optional, options.optional)
+      assert.strictEqual(topicName, 'TestTopic')
+      assert.strictEqual(index.id, '1')
+      assert.strictEqual(opts.optional, options.optional)
     })
 
     return await TestTopic.get(state, { id: '1' }, options)
@@ -47,9 +47,9 @@ describe('get', function () {
     }
 
     mockStateArchivistMethod(state, 'get', null, function (topicName: string, index: any, opts: any) {
-      assert.equal(topicName, 'TestTopic')
-      assert.equal(index.id, 1)
-      assert.equal(opts.optional, options.optional)
+      assert.strictEqual(topicName, 'TestTopic')
+      assert.strictEqual(index.id, '1')
+      assert.strictEqual(opts.optional, options.optional)
     })
 
     return await TestTopic.get(state, { id: '1' }, options)

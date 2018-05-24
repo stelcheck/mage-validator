@@ -6,7 +6,7 @@ describe('loadTopicsFromModules', function () {
     const exports = {}
     loadTopicsFromModules(exports)
 
-    assert.deepEqual(exports, {
+    assert.deepStrictEqual(exports, {
       topicOne: require('../fixtures/lib/modules/moduleThree/topics/topicOne').default
     })
   })

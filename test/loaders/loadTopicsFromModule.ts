@@ -11,14 +11,14 @@ describe('loadTopicsFromModule', function () {
     const exports = {}
     loadTopicsFromModule(exports, 'moduleOne')
 
-    assert.deepEqual(exports, {})
+    assert.deepStrictEqual(exports, {})
   })
 
   it('Does nothing if the module has an empty topics folder', function () {
     const exports = {}
     loadTopicsFromModule(exports, 'moduleTwo')
 
-    assert.deepEqual(exports, {})
+    assert.deepStrictEqual(exports, {})
   })
 
   it('Throws an error if a topic is already defined', async function () {
@@ -41,7 +41,7 @@ describe('loadTopicsFromModule', function () {
     const exports = {}
     loadTopicsFromModule(exports, 'moduleThree')
 
-    assert.deepEqual(exports, {
+    assert.deepStrictEqual(exports, {
       topicOne: require('../fixtures/lib/modules/moduleThree/topics/topicOne').default
     })
   })
@@ -50,13 +50,13 @@ describe('loadTopicsFromModule', function () {
     const exports: any = {}
     loadTopicsFromModule(exports, 'moduleThree')
 
-    assert.equal(exports.topicOne.getClassName(), 'topicOne')
+    assert.strictEqual(exports.topicOne.getClassName(), 'topicOne')
   })
 
   it('Explicit class names on default exports are preserved', function () {
     const exports: any = {}
     loadTopicsFromModule(exports, 'moduleFour')
 
-    assert.equal(exports.topicThree.getClassName(), 'CustomName')
+    assert.strictEqual(exports.topicThree.getClassName(), 'CustomName')
   })
 })

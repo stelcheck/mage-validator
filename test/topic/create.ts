@@ -5,7 +5,9 @@ import * as mage from 'mage'
 let state: mage.core.IState
 
 describe('create', function () {
-  beforeEach(() => state = new mage.core.State())
+  beforeEach(() => {
+    state = new mage.core.State()
+  })
 
   it('Returns a topic instance', async function () {
     const topic = await TestTopic.create(state, { id: '1' })
@@ -24,15 +26,15 @@ describe('create', function () {
 
   it('Create a new instance without data', async function () {
     const topic = await TestTopic.create(state, { id: '1' })
-    assert.equal(topic.name, null)
-    assert.equal(topic.url, null)
+    assert.strictEqual(topic.name, undefined)
+    assert.strictEqual(topic.url, undefined)
   })
 
   it('Non-objects value for index causes an error', async function () {
     try {
       await TestTopic.create(state, <{}> true)
     } catch (error) {
-      assert.equal(error.message, 'Index validation failed')
+      assert.strictEqual(error.message, 'Index validation failed')
       return
     }
 
@@ -45,15 +47,15 @@ describe('create', function () {
       url: 'https://google.com',
     })
 
-    assert.equal(topic.name, 'hi')
-    assert.equal(topic.url, 'https://google.com')
+    assert.strictEqual(topic.name, 'hi')
+    assert.strictEqual(topic.url, 'https://google.com')
   })
 
   it('Non-objects data cause an error', async function () {
     try {
-      await TestTopic.create(state, { id: '1' }, <{}> [])
+      await TestTopic.create(state, { id: '1' }, [] as any)
     } catch (error) {
-      assert.equal(error.message, 'Received data is not an object (received [])')
+      assert.strictEqual(error.message, 'Received data is not an object (received [])')
       return
     }
 

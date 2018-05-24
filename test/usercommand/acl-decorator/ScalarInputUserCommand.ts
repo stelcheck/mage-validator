@@ -49,7 +49,7 @@ class BooleanUserCommand {
 let state: mage.core.IState
 
 describe('ScalarInputUserCommand', function () {
-  beforeEach(() => state = new mage.core.State())
+  beforeEach(() => { state = new mage.core.State() })
 
   it('Execution fails if input is invalid', async function () {
     try {
@@ -63,11 +63,11 @@ describe('ScalarInputUserCommand', function () {
 
   it('Execution succeeds if input is valid (string input/output)', async function () {
     const ret = await StringUserCommand.execute(state, 'hello')
-    assert.equal(ret, 'hello')
+    assert.strictEqual(ret, 'hello')
   })
 
   it('Execution succeeds if input is valid (boolean input/output)', async function () {
     const ret = await BooleanUserCommand.execute(state, true)
-    assert.equal(ret, false)
+    assert.strictEqual(ret, false)
   })
 })

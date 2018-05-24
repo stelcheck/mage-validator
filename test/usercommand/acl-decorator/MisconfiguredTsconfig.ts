@@ -5,12 +5,10 @@ import { Acl } from '../../../src'
 
 const sinon = require('sinon')
 
-let state: mage.core.IState
 let reflectStub: any
 
 describe('MisconfiguredTsconfig', function () {
   before(() => {
-    state = new mage.core.State()
     reflectStub  = sinon.stub(Reflect, 'getMetadata').returns(null)
   })
 

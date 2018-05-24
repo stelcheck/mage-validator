@@ -55,7 +55,7 @@ class NestedTopicUserCommand {
 let state: mage.core.IState
 
 describe('NestedTopicUserCommand', function () {
-  beforeEach(() => state = new mage.core.State())
+  beforeEach(() => { state = new mage.core.State() })
 
   const exec: any = NestedTopicUserCommand.execute
 
@@ -128,6 +128,6 @@ describe('NestedTopicUserCommand', function () {
     }, 1)
 
     assert(ret instanceof NestedTopic)
-    assert.equal(ret.count, 2)
+    assert.strictEqual(ret.count, 2)
   })
 })

@@ -106,7 +106,7 @@ describe('create', function () {
     }))
 
     assert.strictEqual(tTest.child.childId, '2')
-    assert.deepEqual(tTest.child.children.constructor, Array)
+    assert.deepStrictEqual(tTest.child.children.constructor, Array)
     assert.strictEqual(tTest.child.children[0].childId, '3')
     assert.strictEqual(tTest.child.children[0].children[0].childId, '4')
   })

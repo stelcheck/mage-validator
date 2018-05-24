@@ -199,11 +199,7 @@ describe('mutate', function () {
     state.archivist.get = (...args: any[]) => args.pop()(null, loaded.TestTopicoids1.data)
 
     const retrievedTest = await TestTopic.get(state, { id: '1' })
-    assert.deepEqual(retrievedTest, {
-      child: {
-        childId: '123'
-      }
-    })
+    assert.deepStrictEqual(retrievedTest.child.childId, '123')
   })
 
   it('Moving an untyped nested tome attribute from a tome topic to normal topic behaves correctly', async () => {
@@ -234,7 +230,7 @@ describe('mutate', function () {
     state.archivist.get = (...args: any[]) => args.pop()(null, loaded.TestTopicoids1.data)
 
     const retrievedTest = await TestTopic.get(state, { id: '1' })
-    assert.deepEqual(retrievedTest.garbage.kid, {
+    assert.deepStrictEqual(retrievedTest.garbage.kid, {
       a: {
         b: '123'
       }
@@ -257,7 +253,7 @@ describe('mutate', function () {
     state.archivist.get = (...args: any[]) => args.pop()(null, loaded.TestTopicoids1.data)
 
     const retrievedTest = await TestTopic.get(state, { id: '1' })
-    assert.deepEqual(retrievedTest.child, {
+    assert.deepStrictEqual(retrievedTest.child, {
       childId: '123'
     })
   })

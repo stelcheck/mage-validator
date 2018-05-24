@@ -154,6 +154,6 @@ describe('validate', function () {
     tTest.untypedChild = child
 
     const errors = await validate(tTest.untypedChild)
-    assert.equal(errors.length, 1)
+    assert.strictEqual(errors.length, 1)
   })
 })

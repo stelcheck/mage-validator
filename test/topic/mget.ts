@@ -16,17 +16,17 @@ describe('mget', function () {
     }]
 
     mockStateArchivistMethod(state, 'mget', data, function (queries: mage.archivist.IArchivistQuery[], opts: any) {
-      assert.equal(queries[0].topic, 'TestTopic')
-      assert.equal(queries[0].index.id, 1)
-      assert.equal(opts, null)
+      assert.strictEqual(queries[0].topic, 'TestTopic')
+      assert.strictEqual(queries[0].index.id, '1')
+      assert.strictEqual(opts, undefined)
     })
 
     const topics: TestTopic[] = await TestTopic.mget(state, [{ id: '1' }])
     const topic = topics[0]
 
     assert(topic instanceof TestTopic)
-    assert.equal(topic.name, data[0].name)
-    assert.equal(topic.url, data[0].url)
+    assert.strictEqual(topic.name, data[0].name)
+    assert.strictEqual(topic.url, data[0].url)
   })
 
   it('Options are passed to state.archivist.mget', async function () {
@@ -36,9 +36,9 @@ describe('mget', function () {
     }
 
     mockStateArchivistMethod(state, 'mget', data, function (queries: mage.archivist.IArchivistQuery[], opts: any) {
-      assert.equal(queries[0].topic, 'TestTopic')
-      assert.equal(queries[0].index.id, 1)
-      assert.equal(opts.optional, options.optional)
+      assert.strictEqual(queries[0].topic, 'TestTopic')
+      assert.strictEqual(queries[0].index.id, '1')
+      assert.strictEqual(opts.optional, options.optional)
     })
 
     return await TestTopic.mget(state, [{ id: '1' }], options)

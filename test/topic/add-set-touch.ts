@@ -1,6 +1,6 @@
 /* tslint:disable:no-console */
 import * as assert from 'assert'
-import { createTopic } from './'
+import { TestTopic, createTopic } from './'
 import * as mage from 'mage'
 
 let state: mage.core.IState
@@ -13,7 +13,7 @@ function createTests(name: string, testCreateArgs: string[], assertions: (...arg
 
     async function setupTopic(data: any) {
       return createTopic(state, data, name, function (topicName: string, ...args: string[]) {
-        assert.equal(topicName, 'TestTopic')
+        assert.strictEqual(topicName, 'TestTopic')
         assertions(data, ...args)
       })
     }
@@ -29,7 +29,7 @@ function createTests(name: string, testCreateArgs: string[], assertions: (...arg
       } catch (error) {
         const message = error.validationErrors[0].constraints.isUrl
 
-        return assert.equal(message, 'url must be an URL address')
+        return assert.strictEqual(message, 'url must be an URL address')
       }
 
       throw new Error('Did not fail')
@@ -47,16 +47,16 @@ function createTests(name: string, testCreateArgs: string[], assertions: (...arg
 }
 
 createTests('add', ['application/json', 'utf8'], function (data: any, index: any, addData: any) {
-  assert.equal(index.id, 1)
-  assert.deepEqual(addData, data)
+  assert.strictEqual(index.id, '1')
+  assert.deepStrictEqual(addData, Object.assign(new TestTopic(), data))
 })
 
 createTests('set', ['application/json', 'utf8'], function (data: any, index: any, addData: any) {
-  assert.equal(index.id, 1)
-  assert.deepEqual(addData, data)
+  assert.strictEqual(index.id, '1')
+  assert.deepStrictEqual(addData, Object.assign(new TestTopic(), data))
 })
 
 createTests('touch', [], function (data: any, index: any) {
   console.log(data)
-  assert.equal(index.id, 1)
+  assert.strictEqual(index.id, '1')
 })

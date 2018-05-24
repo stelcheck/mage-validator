@@ -60,7 +60,7 @@ class NestedArrayUserCommand {
 let state: mage.core.IState
 
 describe('NestedDataUserCommand', function () {
-  beforeEach(() => state = new mage.core.State())
+  beforeEach(() => { state = new mage.core.State() })
 
   it('Nested data is validated upon input', async function () {
     try {
@@ -86,7 +86,7 @@ describe('NestedDataUserCommand', function () {
   it('Valid data structures are returned', async function () {
     const ret = await NestedDataUserCommand.execute(state, <NestedData> { count: 1 }, 1)
     assert(ret instanceof NestedData)
-    assert.equal(ret.count, 2)
+    assert.strictEqual(ret.count, 2)
   })
 
   it('Nested array is validated upon input', async function () {
@@ -113,6 +113,6 @@ describe('NestedDataUserCommand', function () {
   it('Valid array data structures are returned', async function () {
     const ret = await NestedArrayUserCommand.execute(state, <NestedData[]> [{ count: 1 }], 1)
     assert(ret[0] instanceof NestedData)
-    assert.equal(ret[0].count, 2)
+    assert.strictEqual(ret[0].count, 2)
   })
 })
