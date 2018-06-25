@@ -127,6 +127,50 @@ export function Type(type: any) {
 }
 
 /**
+ * Validate ValidatedObjects and throw an error if the data is invalid.
+ *
+ * @param message
+ * @param code
+ * @param state
+ * @param parsedData
+ * @param receivedData
+ */
+async function validateObject(message: string, code: string, state: any, parsedData: any, receivedData?: any) {
+  const errors = await classValidator.validate(parsedData)
+  if (errors.length > 0) {
+    throw new ValidationError(message, code, {
+      actorId: state.actorId,
+      userCommand: state.description,
+      receivedData,
+      parsedData
+    }, errors)
+  }
+
+  return parsedData
+}
+
+/**
+ * Validate the output of an `execute` call of an user command.
+ *
+ * @param value
+ */
+async function validateOutput(state: mage.core.IState, value: any) {
+  const type = typeof value
+
+  if (type !== 'object') {
+    return
+  }
+
+  if (!Array.isArray(value)) {
+    return validateObject('Invalid user command return value', 'server', state, value)
+  }
+
+  for (const val of value) {
+    await validateOutput(state, val)
+  }
+}
+
+/**
  * @Acl decorator
  *
  * Protect the user command with the given ACL and defined type validation
@@ -159,20 +203,6 @@ export function Acl(...acl: string[]) {
     // We attach additional information to the UserCommand class
     UserCommand.acl = acl
     UserCommand.params = parameterNames
-
-    async function validateObject(message: string, code: string, state: any, parsedData: any, receivedData?: any) {
-      const errors = await classValidator.validate(parsedData)
-      if (errors.length > 0) {
-        throw new ValidationError(message, code, {
-          actorId: state.actorId,
-          userCommand: state.description,
-          receivedData,
-          parsedData
-        }, errors)
-      }
-
-      return parsedData
-    }
 
     return {
       value: async (state: mage.core.IState, ...args: any[]) => {
@@ -208,22 +238,9 @@ export function Acl(...acl: string[]) {
         // Execute the actual user command
         const output = await execute(state, ...castedArgs)
 
-        // Validate the returned value
-        const type = typeof output
-        if (type !== 'object') {
-          return output
-        }
+        await validateOutput(state, output)
 
-        if (!Array.isArray(output)) {
-          return validateObject('Invalid user command return value', 'server', state, output)
-        }
-
-        // In the case of arrays, validate each entries
-        for (const [pos, val] of output.entries()) {
-          await validateObject(`Invalid user command return value in array (index: ${pos})`, 'server', state, val)
-        }
-
-        return output
+        return output as any
       }
     }
   }
