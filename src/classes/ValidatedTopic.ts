@@ -362,15 +362,16 @@ export default class ValidatedTopic {
     this: IStaticThis<I, T>,
     state: mage.core.IState,
     partialIndex: PartialIndex<I>,
-    options?: archivist.IArchivistGetOptions): Promise<T[]> {
+    options?: archivist.IArchivistGetOptions | archivist.IArchivistListOptions): Promise<T[]> {
 
     const topicName = this.getClassName()
 
     return this.execute<I, T, T[]>(state, 'list', [
       topicName,
-      partialIndex
+      partialIndex,
+      options
     ], async (indexes: I[]) => {
-      return this.mget<T>(state, indexes, options)
+      return this.mget<T>(state, indexes, options as archivist.IArchivistGetOptions)
     })
   }
 

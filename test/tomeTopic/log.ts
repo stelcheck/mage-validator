@@ -55,8 +55,7 @@ describe('log, inspect, etc', function () {
     const res = '{"name":"my name","list":["b","c"],"num":1}'
     assert.strictEqual(tTest.toString(), res)
     assert.strictEqual((<any> tTest)[Symbol.toStringTag](), res)
-    assert.strictEqual(tTest.name.toString(), 'my name')
-    assert.strictEqual(tTest.num.toString(), '1')
+    assert.strictEqual(tTest.list.toString(), '["b","c"]')
   })
 
   it('Symbol(util.inspect.custom), custom', async () => {

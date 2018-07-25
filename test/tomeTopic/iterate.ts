@@ -156,8 +156,8 @@ describe('iterate', function () {
 
       tTest.list = list
 
-      for (const [_, entry] of tTest.list.entries()) {
-        assert.strictEqual(entry, list.shift())
+      for (const entry of tTest.list.entries()) {
+        assert.strictEqual(entry[1], list.shift())
       }
     })
 
@@ -171,9 +171,9 @@ describe('iterate', function () {
 
       tTest.children = children
 
-      for (const [_, entry] of tTest.children.entries()) {
+      for (const entry of tTest.children.entries()) {
         const child = <TestTome> children.shift()
-        assert.strictEqual(entry.childId, child.childId)
+        assert.strictEqual(entry[1].childId, child.childId)
       }
     })
 
@@ -187,8 +187,8 @@ describe('iterate', function () {
 
       tTest.children = children
 
-      for (const [_, entry] of tTest.children.entries()) {
-        entry.childId += '0'
+      for (const entry of tTest.children.entries()) {
+        entry[1].childId += '0'
       }
 
       assert.strictEqual(tTest.children[0].childId, '10')
