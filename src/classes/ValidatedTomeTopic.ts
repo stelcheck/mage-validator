@@ -18,9 +18,8 @@ const ARRAY_SLICE_METHODS = [
   'splice'
 ]
 
-const ARRAY_SEARCH_METHODS = [
+const ARRAY_PARSE_METHODS = [
   'sort',
-  'includes',
   'forEach',
   'filter',
   'map',
@@ -30,6 +29,10 @@ const ARRAY_SEARCH_METHODS = [
   'reduceRight',
   'find',
   'findIndex'
+]
+
+const ARRAY_SEARCH_METHODS = [
+  'includes'
 ]
 
 function createToString(tome: any) {
@@ -70,8 +73,16 @@ function processArrayTomeMethodRequest(target: any, key: string, ctor: any) {
       .map((val: any) => proxifyOrUntome(val, ctor))
   }
 
-  // For methods receiving a function as a first parameter (map, reduce, forEach, etc)
   if (ARRAY_SEARCH_METHODS.includes(key)) {
+    return function (...args: any[]) {
+      const vals = target.map((t: any) => proxifyOrUntome(t, ctor))
+
+      return vals[key](...args)
+    }
+  }
+
+  // For methods receiving a function as a first parameter (map, reduce, forEach, etc)
+  if (ARRAY_PARSE_METHODS.includes(key)) {
     return function (...args: any[]) {
       const iterator = args[0]
       args[0] = function (...iteratorArgs: any[]) {

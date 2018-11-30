@@ -295,6 +295,19 @@ describe('iterate', function () {
       assert.strictEqual(tTest.list[0], '2')
     })
 
+    it('includes returns true if value is found', async () => {
+      const tTest = await TestTomeTopic.create(state, { id: 'hello' })
+      tTest.children = [{
+        childId: '1'
+      }]
+      tTest.list = [
+        '1'
+      ]
+
+      const found = tTest.list.includes('1')
+      assert.strictEqual(found, true)
+    })
+
     it('find returns a proxied tomes', async () => {
       const tTest = await TestTomeTopic.create(state, { id: 'hello' })
       tTest.children = [{
