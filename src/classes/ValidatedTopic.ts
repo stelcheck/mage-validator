@@ -283,9 +283,12 @@ export default class ValidatedTopic {
     ], async (list: any) => {
       const instances: ValidatedTopic[] = []
 
-      for (let d = 0; d < list.length; d += 1) {
-        const data = list[d]
-        const index = queries[d].index
+      for (const [i, data] of list.entries()) {
+        if (!data) {
+          continue
+        }
+
+        const index = queries[i].index
         const instance = await this.create(state, index as I, data)
 
         instances.push(instance)

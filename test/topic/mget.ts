@@ -43,4 +43,10 @@ describe('mget', function () {
 
     return await TestTopic.mget(state, [{ id: '1' }], options)
   })
+
+  it('null values are ignored and not returned', async function () {
+    mockStateArchivistMethod(state, 'mget', [null])
+    const ret = await TestTopic.mget(state, [{ id: '1' }])
+    assert.strictEqual(ret.length, 0)
+  })
 })
