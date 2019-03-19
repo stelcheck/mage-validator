@@ -1,4 +1,4 @@
-import ValidatedTopic, { IStaticThis } from './ValidatedTopic'
+import ValidatedTopic, { IStaticThis, TopicData } from './ValidatedTopic'
 import { defaultMetadataStorage } from 'class-transformer/storage'
 
 import { archivist } from 'mage'
@@ -245,13 +245,14 @@ function createTomeProxy(tome: any, ctor: any): any {
 export default class ValidatedTomeTopic extends ValidatedTopic {
   public static readonly mediaType = 'application/x-tome'
 
-  public tome: any
+  private tome: any
 
   public static async create<I extends archivist.IArchivistIndex, T extends ValidatedTopic>(
     this: IStaticThis<I, T>,
     state: mage.core.IState,
     index: I,
-    data?: any): Promise<T> {
+    data?: TopicData<T>
+  ): Promise<T> {
 
     const tome: any = Tome.isTome(data) ? data : Tome.conjure(data || {})
     const className = this.getClassName()

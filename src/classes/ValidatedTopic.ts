@@ -7,13 +7,20 @@ import * as mage from 'mage'
 
 import { ValidationError } from '../errors'
 
+// tslint:disable:completed-docs
+type Key = string | number | symbol
+
+export type Diff<T extends Key, U extends Key> = ({[P in T]: P } & {[P in U]: never } & { [x: string]: never })[T]
+
+// tslint:disable:completed-docs
+export type Omit<T, K extends keyof T> = Pick<Partial<T>, Diff<keyof T, K>>
+
 /**
  * Anonymous object representation of a validated topic
  *
  * Generally passed to Topic.create()
  */
-export type TopicData<T extends ValidatedTopic> = Partial<T>
-
+export type TopicData<T extends ValidatedTopic> = Omit<T, keyof ValidatedTopic>
 /**
  * Partial index type
  */

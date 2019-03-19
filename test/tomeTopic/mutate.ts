@@ -39,7 +39,7 @@ class TestTome {
 
   @Type(() => TestTome)
   @ValidateNested()
-  public child: TestTome
+  public child?: TestTome
 
   public children: TestTome[]
 }
@@ -240,7 +240,9 @@ describe('mutate', function () {
   it('Slicing from top-level untyped tome attribute and inserting the value into a normal topic behaves correctly', async () => {
     const tTest = await TestTomeTopic.create(state, { id: '1' }, {
       untypedChildren: [{
-        childId: '123'
+        childId: '123',
+        num: 1,
+        children: []
       }]
     })
 
@@ -254,7 +256,9 @@ describe('mutate', function () {
 
     const retrievedTest = await TestTopic.get(state, { id: '1' })
     assert.deepStrictEqual(retrievedTest.child, {
-      childId: '123'
+      childId: '123',
+      num: 1,
+      children: []
     })
   })
 })
