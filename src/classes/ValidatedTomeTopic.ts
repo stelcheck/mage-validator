@@ -127,8 +127,7 @@ function extractType(typeInfo: any, typeMap: any, key: any) {
  */
 function createTomeProxy(tome: any, ctor: any): any {
   const typeMap: any = {}
-
-  return new Proxy(tome, {
+  const proxy: any = new Proxy(tome, {
       ownKeys(target) {
         return Object.keys(target).concat([
           '__dirty__',
@@ -190,10 +189,16 @@ function createTomeProxy(tome: any, ctor: any): any {
           return ctor
         }
 
+        // Extract the value
         const val = target[key]
 
-        // Return the value if it is not defined
+        // Undefined means either the value is undefined,
+        // or we are trying to access a prototype method
         if (val === undefined) {
+          if (ctor.prototype[key]) {
+            return ctor.prototype[key].bind(proxy)
+          }
+
           return val
         }
 
@@ -237,6 +242,8 @@ function createTomeProxy(tome: any, ctor: any): any {
         return true
       }
     })
+
+  return proxy
 }
 
 /**

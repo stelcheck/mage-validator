@@ -5,6 +5,8 @@ import { ValidatedTomeTopic } from '../../src'
 import { IsNumberString, IsUrl, validate, ValidateNested } from 'class-validator'
 import { Type } from 'class-transformer'
 
+import { mockStateArchivistMethod } from './'
+
 /**
  * Nested type
  */
@@ -19,6 +21,10 @@ class TestTome {
   @Type(() => TestTome)
   @ValidateNested()
   public children: TestTome[]
+
+  public setChildId(id: string) {
+    this.childId = id
+  }
 }
 
 /**
@@ -155,5 +161,44 @@ describe('validate', function () {
 
     const errors = await validate(tTest.untypedChild)
     assert.strictEqual(errors.length, 1)
+  })
+
+  it('set and get will return properly deserialized objects (array)', async () => {
+    const child = new TestTome()
+    child.childId = '1'
+    mockStateArchivistMethod(state, 'get', {
+      url: 'http://google.com/',
+      children: [child]
+    }, function (topicName: string, index: any, opts: any) {
+      assert.strictEqual(topicName, 'TestTomeTopic')
+      assert.strictEqual(index.id, '1')
+      assert.strictEqual(opts, undefined)
+    })
+
+    const index =  { id: '1' }
+    const tTest = await TestTomeTopic.get(state, index)
+    const fetchedChild = tTest.children.pop()
+    if (fetchedChild) {
+      fetchedChild.setChildId('2')
+      assert.strictEqual(fetchedChild.childId, '2')
+    }
+  })
+
+  it('set and get will return properly deserialized objects (nested)', async () => {
+    const child = new TestTome()
+    child.childId = '1'
+    mockStateArchivistMethod(state, 'get', {
+      url: 'http://google.com/',
+      child
+    }, function (topicName: string, index: any, opts: any) {
+      assert.strictEqual(topicName, 'TestTomeTopic')
+      assert.strictEqual(index.id, '1')
+      assert.strictEqual(opts, undefined)
+    })
+
+    const index =  { id: '1' }
+    const tTest = await TestTomeTopic.get(state, index)
+    tTest.child.setChildId('2')
+    assert.strictEqual(tTest.child.childId, '2')
   })
 })
