@@ -19,6 +19,7 @@ export function mockStateArchivistMethod(state: mage.core.IState, name: string, 
 
 describe('tome topics', function () {
   require('./create')
+  require('./get')
   require('./mutate')
   require('./delete')
   require('./iterate')

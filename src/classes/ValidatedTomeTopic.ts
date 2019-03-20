@@ -252,8 +252,6 @@ function createTomeProxy(tome: any, ctor: any): any {
 export default class ValidatedTomeTopic extends ValidatedTopic {
   public static readonly mediaType = 'application/x-tome'
 
-  private tome: any
-
   public static async create<I extends archivist.IArchivistIndex, T extends ValidatedTopic>(
     this: IStaticThis<I, T>,
     state: mage.core.IState,
@@ -279,7 +277,7 @@ export default class ValidatedTomeTopic extends ValidatedTopic {
 
     await instance.setIndex(index)
 
-    return new Proxy(instance, {
+    const proxy: any = new Proxy(instance, {
       ownKeys() {
         return Object.keys(tome)
       },
@@ -305,12 +303,21 @@ export default class ValidatedTomeTopic extends ValidatedTopic {
           return target.constructor
         }
 
-        if (key === 'tome') {
-          return tome
+        if (key === 'getData') {
+          return () => tome
         }
 
         if (!tome[key]) {
-          return target[key]
+          if (typeof target[key] === 'function') {
+            return target[key].bind(proxy)
+          }
+
+          if (key === '_state' || key === '_topic' || key === '_index' ) {
+            return target[key]
+          }
+
+
+          return undefined
         }
 
         if (ObjectTome.isObjectTome(tome[key]) || ArrayTome.isArrayTome(tome[key])) {
@@ -345,8 +352,7 @@ export default class ValidatedTomeTopic extends ValidatedTopic {
         return true
       }
     })
-  }
-  public getData() {
-    return this.tome
+
+    return proxy
   }
 }
