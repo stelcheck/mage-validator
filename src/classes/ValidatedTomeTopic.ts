@@ -1,5 +1,6 @@
 import ValidatedTopic, { IStaticThis, TopicData } from './ValidatedTopic'
 import { defaultMetadataStorage } from 'class-transformer/storage'
+import * as classTransformer from 'class-transformer'
 
 import { archivist } from 'mage'
 import * as mage from 'mage'
@@ -259,18 +260,13 @@ export default class ValidatedTomeTopic extends ValidatedTopic {
     data?: TopicData<T>
   ): Promise<T> {
 
-    const tome: any = Tome.isTome(data) ? data : Tome.conjure(data || {})
     const className = this.getClassName()
-    const instance = new this()
     const typeMap: any = {}
 
-    // Create default values
-    if (!data) {
-      Object.keys(instance).forEach((key) => {
-        tome.set(key, (<any> instance)[key])
-        delete (<any> instance)[key]
-      })
-    }
+    const isTome = Tome.isTome(data)
+    const rawData: any = isTome ? Tome.unTome(data) : data
+    const instance = classTransformer.plainToClass<T, object>(this, rawData) || new this()
+    const tome: any = isTome ? data : Tome.conjure(instance)
 
     instance.setTopic(className)
     instance.setState(state)
@@ -315,7 +311,6 @@ export default class ValidatedTomeTopic extends ValidatedTopic {
           if (key === '_state' || key === '_topic' || key === '_index' ) {
             return target[key]
           }
-
 
           return undefined
         }

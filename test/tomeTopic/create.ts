@@ -51,7 +51,7 @@ class TestTomeTopic extends ValidatedTomeTopic {
 
   @Type(() => TestTome)
   @ValidateNested()
-  public children: TestTome[]
+  public children: TestTome[] = []
   public whatever: any
 }
 
@@ -78,6 +78,16 @@ describe('create', function () {
     const tome = Tome.conjure({ name: 'ohai' })
     const tTest = await TestTomeTopic.create(state, { id: '1' }, tome)
     assert.strictEqual(tTest.name, 'ohai')
+  })
+
+  it('tome nested values are properly set and accessible', async () => {
+    const test = new TestTome()
+    test.childId = '1'
+
+    const tome = Tome.conjure({ name: 'ohai', children: [test] })
+    const tTest = await TestTomeTopic.create(state, { id: '1' }, tome)
+    assert.strictEqual(tTest.children.length, 1)
+    assert.strictEqual(tTest.children[0].childId, '1')
   })
 
   it('getData returns the tome instance', async () => {
