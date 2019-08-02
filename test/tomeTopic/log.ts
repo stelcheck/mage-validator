@@ -52,7 +52,7 @@ describe('log, inspect, etc', function () {
     tTest.list = ['b', 'c']
     tTest.num = 1
 
-    const res = '{"name":"my name","list":["b","c"],"num":1}'
+    const res = '{"_version":0,"name":"my name","list":["b","c"],"num":1}'
     assert.strictEqual(tTest.toString(), res)
     assert.strictEqual((<any> tTest)[Symbol.toStringTag](), res)
     assert.strictEqual(tTest.list.toString(), '["b","c"]')
@@ -63,9 +63,9 @@ describe('log, inspect, etc', function () {
     tTest.name = 'my name'
     tTest.list = ['b', 'c']
 
-    const res = 'TestTopic -> { name: \'my name\', list: [ \'b\', \'c\' ] }'
+    const res = 'TestTopic -> { _version: 0, name: \'my name\', list: [ \'b\', \'c\' ] }'
 
-    assert.strictEqual((<any> tTest).inspect(0, {}), 'TestTopic -> { name: \'my name\', list: [Array] }')
+    assert.strictEqual((<any> tTest).inspect(0, {}), 'TestTopic -> { _version: 0, name: \'my name\', list: [Array] }')
     assert.strictEqual((<any> tTest).inspect(1, {}), res)
     assert.strictEqual((<any> tTest)[inspect.custom](), res)
   })

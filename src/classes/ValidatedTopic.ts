@@ -34,6 +34,7 @@ export type PartialIndex<I> = {
  * that return a properly typed output.
  */
 export interface IStaticThis<I, T> {
+  version: number,
   // Todo: any should be I!
   indexType: { new(): any },
 
@@ -98,7 +99,12 @@ export default class ValidatedTopic {
   public static readonly indexType: any
   public static readonly vaults = {}
 
+  public static version = 0
+  public static migrations = new Map<number, string>()
+
   private static _className: string
+
+  public _version: number = 0
 
   /**
    * Return the current class name
@@ -160,6 +166,11 @@ export default class ValidatedTopic {
     instance.setTopic(this.getClassName())
     instance.setState(state)
     await instance.setIndex(index)
+
+    /* istanbul ignore next */
+    if (!instance._version) {
+      instance._version = this.version
+    }
 
     return instance
   }
@@ -228,7 +239,10 @@ export default class ValidatedTopic {
         return undefined
       }
 
-      return this.create(state, index, data)
+      const instance = await this.create(state, index, data)
+      await instance.migrate()
+
+      return instance
     })
   }
 
@@ -297,6 +311,8 @@ export default class ValidatedTopic {
 
         const index = queries[i].index
         const instance = await this.create(state, index as I, data)
+
+        await instance.migrate()
 
         instances.push(instance)
       }
@@ -538,6 +554,38 @@ export default class ValidatedTopic {
     const errors = await classValidator.validate(this)
     if (errors.length > 0) {
       this.raiseValidationError(errors, errorMessage, code)
+    }
+  }
+
+  /**
+   * Migrate data using predefined migration methods
+   */
+  public async migrate() {
+    const type = this.constructor as typeof ValidatedTopic
+    const { migrations } = type
+
+    let migrated = false
+
+    // tslint:disable-next-line:strict-type-predicates
+    if (this._version === undefined) {
+      this._version = 0
+    }
+
+    if (this._version === type.version) {
+      return
+    }
+
+    for (const [version, methodName] of migrations.entries()) {
+      if (version > this._version) {
+        const method = (this as any)[methodName]
+        await method.call(this)
+        this._version = version
+        migrated = true
+      }
+    }
+
+    if (migrated) {
+      await this.set()
     }
   }
 

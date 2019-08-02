@@ -254,6 +254,63 @@ topic directly as you user command parameter; all you will
 then need to do is to set the index at some point before you attempt
 to record any operations:
 
+#### Migrating topics
+
+> `./lib/modules/modulename/topics/Player.ts`
+
+```typescript
+import { ValidatedTopic, ValidateNested, IsUUID, IsAlpha } from 'mage-validator';
+import { Type } from 'class-transform';
+import PlayerData from '../topics/PlayerData'
+
+class Index {
+  @isUUID(5)
+  playerId: string
+}
+
+export default class {
+    // Index configuration
+    public static readonly index = ['playerId']
+    public static readonly indexType = Index
+
+    // Vaults configuration (optional)
+    public static readonly vaults = {}
+    
+    // Attribute instances
+    @IsAlpha()
+    public name: string
+
+    public age: number
+
+    @ValidateNested()
+    @Type(() => PlayerData)
+    public data: PlayerData
+
+    @Migrate(1)
+    public setDefaultName() {
+      if (!this.name) {
+        this.name = 'DefaultName' + Math.floor(Math.random() * 1000)
+      }
+    }
+
+    @Migrate(2)
+    public setDefaultAge() {
+      if (!this.age) {
+        this.age = 0
+      }
+    }
+}
+```
+
+All `ValdiatedTopic` have a `_version`, attribute used for data versioning. The default value is 0.  
+
+You can define methods to be used as migration steps. Use the `Migration`
+decorator to define the version this step will upgrade the data to. 
+Only migration steps with a higher step value than the current data will
+be executed. 
+
+Migrations will **not** be executed on newly created topic instances.
+
 #### Topics as user command parameters
 
 > `./lib/modules/modulename/usercommands/createPlayer.ts`

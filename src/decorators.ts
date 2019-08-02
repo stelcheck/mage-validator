@@ -65,7 +65,7 @@ function wrapCreate(target: any, key: string, childrenType: any, validateFunctio
     }
 
     for (const [subkey, value] of Object.entries(this[key])) {
-      errors = errors.concat(await classValidator.validate(value))
+      errors = errors.concat(await classValidator.validate(value as any))
 
       if (!validateFunction) {
         continue
@@ -243,5 +243,20 @@ export function Acl(...acl: string[]) {
         return output as any
       }
     }
+  }
+}
+
+export function Migrate(version: number) {
+  return function (topic: ValidatedTopic, method: string) {
+    const type = topic.constructor as typeof ValidatedTopic
+    const { migrations } = type
+    migrations.set(version, method)
+
+    const migrationsArray = [...migrations.entries()]
+    const sortedMigrationArrays = migrationsArray.sort(([a], [b]) => a - b)
+    const sortedMigrations = new Map<number, any>(sortedMigrationArrays)
+
+    type.migrations = sortedMigrations
+    type.version = Array.from(sortedMigrations.keys()).pop() as number
   }
 }

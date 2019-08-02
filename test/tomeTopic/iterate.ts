@@ -47,8 +47,8 @@ describe('iterate', function () {
 
       const vals = Object.values(tTest)
 
-      assert.strictEqual(vals[0], 'hello')
-      assert.strictEqual(vals[1][0], '1')
+      assert.strictEqual(vals[1], 'hello')
+      assert.strictEqual(vals[2][0], '1')
       // assert.deepStrictEqual(vals, ['hello', ['1']])
     })
 
@@ -72,7 +72,7 @@ describe('iterate', function () {
       tTest.list = []
       tTest.children = []
 
-      assert.deepStrictEqual(Object.keys(tTest), ['list', 'children'])
+      assert.deepStrictEqual(Object.keys(tTest), ['_version', 'list', 'children'])
     })
 
     it('lists nested tome keys', async () => {
